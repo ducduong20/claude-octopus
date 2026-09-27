@@ -29,10 +29,10 @@
     swell: ['gonna pop!!', 'MMMPH!!', "can't hold it!!", '!!!', 'it’s coming out!!'],
     phew: ['phew…', '…still holding', 'h-help 🥺', 'that was close…', '/compact… pls…'],
     popped: ["…I'm okay!", 'whoa. much better.', 'did I explode?', 'ahh, finally!'],
-    vibe: ['vibing ~ 🎧', 'Claude code, mình chill', 'lo-fi beats to vibe code to', 'auto-accept mode 😎', 'không cần gõ, chỉ cần vibe'],
-    coffee: ['cà phê sữa đá ☕', 'slurp ☕', '*sip*', 'thêm shot espresso nữa 😎'],
-    beer: ['Dzô! 🍺', '1, 2, 3… dzô!', 'bia hơi Hà Nội 🍺', '*ực ực*', 'trăm phần trăm!'],
-    bored: ['chán quá…', 'haizz…', 'làm gì tiếp đây?', 'gõ gì đi mà 🥱', '…', 'đếm cừu: 1, 2, 3…', 'có ai không?', 'prompt tiếp đi nè'],
+    vibe: ['vibing ~ 🎧', 'Claude codes, I chill', 'lo-fi beats to vibe code to', 'auto-accept mode 😎', 'no typing, just vibes'],
+    coffee: ['iced milk coffee ☕', 'slurp ☕', '*sip*', 'one more espresso shot 😎'],
+    beer: ['Cheers! 🍺', '1, 2, 3… cheers!', 'fresh draft beer 🍺', '*gulp gulp*', 'bottoms up!'],
+    bored: ['so bored…', '*sigh*', 'what now?', 'type something 🥱', '…', 'counting sheep: 1, 2, 3…', 'anybody there?', 'next prompt, please'],
     hibernate: ['*yaaawn*… cache went cold', 'nap time… 🌙', 'g’night, cache…'],
     sleepTalk: ['5 more minutes…', 'mmh… cache… cold…', 'zzz… tokens…', '*snore*', '…compact… zzz'],
     wakeCold: ['!! good morning ☀️', 'brr… cold cache, re-reading…', 'huh? I’m up, I’m up!'],
@@ -44,28 +44,28 @@
 
   const THEMES = {
     messi: {
-      banner: '🐐 Gracias, Leo · 10',
-      hello: ['¡Gracias, Leo! 💙🤍', 'GOAT mode on 🐐', 'Vamos Argentina! 🇦🇷'],
-      lines: ['🐐 GOAT', 'Muchachos… 🎶', 'número 10 💙🤍', 'one more for Leo', '¡Vamos! ⚽'],
-      cheer: '¡Campeón! 🏆',
+      banner: '🐐 Thank you, Leo · 10',
+      hello: ['Thank you, Leo! 💙🤍', 'GOAT mode on 🐐', "Let's go, Argentina! 🇦🇷"],
+      lines: ['🐐 GOAT', 'the boys are singing… 🎶', 'number 10 💙🤍', 'one more for Leo', "let's go! ⚽"],
+      cheer: 'Champion! 🏆',
     },
     women: {
       banner: '💐 Happy Women’s Day',
-      hello: ['Happy 20/10! 💐', 'Chúc mừng ngày Phụ nữ! 🌸', 'hoa tặng bạn nè 🌹'],
-      lines: ['🌸 luôn xinh đẹp nhé', 'tặng bạn một bông 🌹', 'hôm nay code nhẹ nhàng thôi 💗', '💐'],
-      cheer: 'nhẹ tênh như cánh hoa 🌸',
+      hello: ['Happy Women’s Day! 💐', 'flowers for you 🌸', 'a rose for you 🌹'],
+      lines: ['🌸 stay wonderful', 'a flower for you 🌹', 'gentle coding today 💗', '💐'],
+      cheer: 'light as a petal 🌸',
     },
     christmas: {
       banner: '🎄 Merry Christmas',
-      hello: ['Merry Christmas! 🎄', 'Ho ho ho! 🎅', 'Giáng sinh an lành ✨'],
+      hello: ['Merry Christmas! 🎄', 'Ho ho ho! 🎅', 'peace and joy ✨'],
       lines: ['Ho ho ho!', 'jingle bells 🔔', 'have you been a good dev? 🎁', 'let it snow ❄️'],
       cheer: 'a lighter Christmas 🎁',
     },
     tet: {
-      banner: '🧧 Chúc Mừng Năm Mới',
-      hello: ['Chúc mừng năm mới! 🧧', 'An khang thịnh vượng ✨', 'Vạn sự như ý 🌼'],
-      lines: ['Lì xì nè! 🧧', 'code không bug cả năm 🌼', 'tiền vô như nước ✨', 'năm mới deploy suôn sẻ 🎆'],
-      cheer: 'năm mới nhẹ tênh! 🎆',
+      banner: '🧧 Happy Lunar New Year',
+      hello: ['Happy Lunar New Year! 🧧', 'health and prosperity ✨', 'may all your wishes come true 🌼'],
+      lines: ['a red envelope for you! 🧧', 'a bug-free year 🌼', 'may money flow in ✨', 'smooth deploys all year 🎆'],
+      cheer: 'a light new year! 🎆',
     },
   };
 
@@ -396,7 +396,7 @@
     ], { duration: rand(6000, 9500), easing: 'linear' });
   }
 
-  /** An emoji item tossed from the octopus in an arc (flower, gift, lì xì, trophy…). */
+  /** An emoji item tossed from the octopus in an arc (flower, gift, red envelope, trophy…). */
   function toss(text, up = false) {
     const c = rel(critter);
     const s = Math.random() < 0.5 ? -1 : 1;
@@ -639,14 +639,14 @@
   // ---- vibe & bored actions
   function sigh() {
     const m = rel(mouth);
-    spawn('sigh', pick(['haizz…', '~', 'hmm…']), m.cx + 6, m.cy - 6, [
+    spawn('sigh', pick(['*sigh*', '~', 'hmm…']), m.cx + 6, m.cy - 6, [
       { transform: 'translate(0,0)', opacity: 0 },
       { transform: 'translate(6px,-4px)', opacity: 0.8, offset: 0.3 },
       { transform: 'translate(22px,6px)', opacity: 0 },
     ], { duration: 1800, easing: 'ease-out' });
   }
 
-  // Daytime: iced Vietnamese coffee. From 17:00: a glass of Hà Nội bia hơi.
+  // Daytime: iced Vietnamese coffee. From 17:00: a glass of Hanoi draft beer.
   const drink = () =>
     /** @type {any} */ (window).__drink || (new Date().getHours() >= 17 || new Date().getHours() < 4 ? 'beer' : 'coffee');
 
@@ -656,7 +656,7 @@
   }
 
   async function cheers() {
-    say(pick(['Dzô! 🍺', '1, 2, 3… dzô!', 'trăm phần trăm!']), 1600);
+    say(pick(['Cheers! 🍺', '1, 2, 3… cheers!', 'bottoms up!']), 1600);
     face('happy', 1600);
     await play('cheers', 1600);
   }
@@ -676,7 +676,7 @@
     const p = play('game', 3600);
     say('🎮 …', 1200);
     await sleep(3000);
-    say(pick(['game over 😩', 'new high score! 🎮', 'thua rồi…']), 1600);
+    say(pick(['game over 😩', 'new high score! 🎮', 'lost again…']), 1600);
     await p;
   }
 
@@ -689,7 +689,7 @@
   }
 
   async function melt() {
-    say(pick(['nằm dài…', '*tan chảy*', 'chán như con gián']), 2000);
+    say(pick(['lying flat…', '*melting*', 'bored stiff']), 2000);
     await play('melt', 4000);
   }
 
@@ -716,7 +716,7 @@
     goal.classList.remove('net');
     void goal.offsetWidth;
     goal.classList.add('net');
-    say('¡GOLAZO! ⚽', 1600);
+    say('GOOOAL! ⚽', 1600);
     face('happy', 1600);
     sparkles(8);
     await play('celebrate', 1800);
@@ -1010,7 +1010,7 @@
         return pick([
           melt, bubblegum, playGame, rollEyes,
           () => { sigh(); say(pick(LINES.bored)); return sleep(10); },
-          () => { say('…đợi mãi', 1400); return play('tap', 1100); },
+          () => { say('…still waiting', 1400); return play('tap', 1100); },
           () => walkTo(rand(-maxX(), maxX())),
         ])();
       case 'idle':
@@ -1103,7 +1103,7 @@
     if (!lively() && tickN % 2) return; // calm: half as many ambient particles
     if (prefs.theme === 'women' && tickN % 2 === 0) fall('petal');
     if (prefs.theme === 'christmas') fall('snow');
-    if (prefs.theme === 'tet' && tickN % 2 === 0) fall('mai', '✿');
+    if (prefs.theme === 'tet' && tickN % 2 === 0) fall('blossom', '✿');
     if (mood === 'vibe' && tickN % 4 === 0) notes(1);
     if (mood === 'sleep' && tickN % 2 === 0) zzz();
     if (mood === 'hibernate' && tickN % 3 === 0) zzz();

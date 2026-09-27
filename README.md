@@ -1,80 +1,80 @@
-# Claude Octopus: đồng hồ đo context cho Claude Code
+# Claude Octopus: a context meter for Claude Code
 
-Con mascot pixel của Claude nằm ở Activity Bar và **lớn dần lên theo lượng context** của session Claude Code đang chạy.
-Khi context đầy, **click vào nó để chạy `/compact`**.
+A pixel Claude mascot that lives in the VS Code Activity Bar and **grows as the context of your running Claude Code session fills up**.
+When the context is full, **click it to run `/compact`**.
 
-## Cách hoạt động
-- Đọc transcript `~/.claude/projects/<project>/<session>.jsonl` của session mới nhất trong workspace, lấy `usage`
-  của assistant message gần nhất: `input + cache_creation + cache_read + output` rồi chia cho context window (mặc định 200k, tự nhảy lên 1M khi vượt).
-- `/compact` được gửi vào terminal đang chạy `claude` (tìm theo tên terminal, hoặc hỏi bạn chọn).
-  Không tìm thấy terminal thì `/compact` được copy vào clipboard.
+## How it works
+- Reads the transcript `~/.claude/projects/<project>/<session>.jsonl` of the most recent session in the workspace and takes the `usage`
+  of the latest assistant message: `input + cache_creation + cache_read + output`, divided by the context window (200k by default, switching to 1M automatically when exceeded).
+- `/compact` is sent to the terminal running `claude` (matched by terminal name, or you pick one).
+  If no terminal is found, `/compact` is copied to the clipboard instead.
 
-## Tương tác
-| Thao tác | Kết quả |
+## Interactions
+| Action | Result |
 |---|---|
-| Click khi context ≥ ngưỡng (75%) | chạy `/compact` |
-| Click khi context còn ít | chọc: nó đỏ mặt, thả tim (chọc 5 lần thì nó nhảy) |
-| Double-click | `/compact` bất kỳ lúc nào (có hỏi xác nhận) |
-| Rê chuột | mắt nhìn theo con trỏ |
-| Xoa chuột qua lại trên đầu | xoa đầu: mắt ^^, đỏ mặt, lắc lư |
-| Status bar `$(hubot) 42%` | click: mở view, hoặc `/compact` khi đã đầy |
+| Click when context ≥ threshold (75%) | runs `/compact` |
+| Click when context is low | poke: it blushes and sends hearts (poke 5 times and it dances) |
+| Double-click | `/compact` at any time (asks for confirmation) |
+| Move the mouse | its eyes follow the cursor |
+| Rub the mouse back and forth over its head | head pat: `^^` eyes, blushing, wiggling |
+| Status bar `$(hubot) 42%` | click: opens the view, or runs `/compact` when full |
 
-## Các trạng thái và chuyển động
-- **idle**: thở, chớp mắt, nhìn quanh, đi dạo, vẫy tay, nhảy, ngó nghiêng, gồng tay, gõ chân, vươn vai, nhảy múa, nói linh tinh,
-  bướm bay tới đậu lên đầu, ngồi "loaf", ngâm nga (nốt nhạc ♪), hắt xì, nháy mắt ✧, ngại ngùng (mắt trái tim), nhào lộn
-- **working** (Claude đang ghi transcript): chân gõ nhanh, bong bóng "•••"
-- **vibe** (Claude tự code liên tục ≥ 60 giây, bạn chỉ ngồi chờ): kính râm rơi xuống mắt, đeo tai nghe, cầm ly cà phê sữa đá (ban ngày) hoặc cốc bia hơi Hà Nội (từ 17h);
-  gật gù theo nhạc lo-fi, gõ chân theo nhịp, nhấp cà phê "slurp ☕" / nâng cốc "1, 2, 3… dzô! 🍺", nốt nhạc bay; "vibing ~ 🎧", "auto-accept mode 😎"
-- **bored** (không có gì xảy ra ≥ 90 giây, trước khi ngủ): mắt lờ đờ, miệng thẳng, thở dài "haizz…";
-  nằm dài tan chảy, thổi kẹo cao su đến nổ, chơi máy game cầm tay, đảo mắt, gõ chân sốt ruột; "gõ gì đi mà 🥱"
-- **eating**: những gì Claude vừa nạp vào context bay vào miệng dưới dạng nhãn "kiến thức", rồi nó nhai và to ra:
-  📄 file đã đọc · ✏️ file đã sửa · ›_ lệnh Bash · 🔍 grep/glob · 🌐 web · 🤖 subagent · 💬 prompt của bạn · 💡 suy nghĩ · 🖼️ ảnh · 🔧 tool khác.
-  Chỉ lấy dòng mới được ghi vào transcript (không phát lại lịch sử cũ).
-- **stressed** (≥ ngưỡng): đổi màu sang đỏ, đổ mồ hôi, run, bốc hơi
-- **panic** (≥ 90%): rung, vung tay, há miệng, phát sáng đỏ, bong bóng "click me"
-- **stuffed** (100%) — *sắp nổ tung*: ngồi bệt, người phồng, mắt `><`, xoa bụng, ợ bong bóng; viền đỏ nhấp nháy quanh view,
-  thanh context thành vạch cảnh báo vàng-đỏ chạy, số % run rẩy, vết nứt phát sáng trên thân.
-  Càng để lâu càng căng (3 cấp: 0–8s, 8–20s, >20s): thêm vết nứt, rung mạnh hơn, thở gấp hơn.
-  Định kỳ nó **phồng to lên, nháy trắng ngày càng nhanh, cả view rung**, văng mảnh vụn… rồi cố nín lại "phew…".
-  Khi `/compact` từ 100%: **💥 NỔ** — chớp trắng, sóng xung kích, mảnh pixel văng tứ tung, rồi bật lại nhỏ xíu "…I'm okay!"
-- **compacting**: co bóp, nhắm mắt; xong thì ợ một cái, phồng lên và thu nhỏ, bắn sparkles, nhào lộn, mắt cười
-- **sleep** (không có hoạt động sau 5 phút): nhắm mắt, thở chậm, "Zzz"
-- **hibernate**: *prompt cache của Claude đã hết hạn* (mặc định 1 giờ sau lần gọi API cuối; TTL 5m/1h được đọc từ transcript).
-  Nó đội mũ ngủ, ngồi cuộn lại, thở bong bóng mũi, trời chuyển đêm với trăng sao; HUD hiện `💤 cache cold`.
-  Chọc thì nó chỉ nói mớ ("5 more minutes…"); chỉ khi có message mới gửi cho Claude nó mới giật mình dậy.
-  Khi cache còn sống, HUD đếm ngược `⚡ 42m`.
+## Moods and animations
+- **idle**: breathes, blinks, looks around, wanders, waves, hops, peeks, flexes, taps its foot, stretches, dances, chatters,
+  a butterfly lands on its head, sits in "loaf mode", hums (♪ notes), sneezes, winks ✧, gets shy (heart eyes), does backflips
+- **working** (Claude is writing to the transcript): fast tapping feet, a "•••" thinking bubble
+- **vibe** (Claude has been coding non-stop for ≥ 60 seconds while you just wait): sunglasses drop onto its eyes, headphones go on, and it holds an iced Vietnamese coffee (daytime) or a glass of Hanoi draft beer (from 17:00);
+  it nods to lo-fi beats, taps along, sips "slurp ☕" or raises a glass "1, 2, 3… cheers! 🍺", music notes float up; "vibing ~ 🎧", "auto-accept mode 😎"
+- **bored** (nothing has happened for ≥ 90 seconds, before it falls asleep): droopy eyes, flat mouth, "*sigh*";
+  it lies flat and melts, blows bubblegum until it pops, plays a handheld game, rolls its eyes, taps impatiently; "type something 🥱"
+- **eating**: whatever Claude just loaded into the context flies into its mouth as little "knowledge" chips, then it munches and grows:
+  📄 file read · ✏️ file edited · ›_ Bash command · 🔍 grep/glob · 🌐 web · 🤖 subagent · 💬 your prompt · 💡 thinking · 🖼️ image · 🔧 other tool.
+  Only newly written transcript lines are used (history is never replayed).
+- **stressed** (≥ threshold): turns red, sweats, trembles, lets off steam
+- **panic** (≥ 90%): shakes, flails its arms, gasps, glows red, "click me" bubble
+- **stuffed** (100%), *about to burst*: sits down, puffed up, `><` eyes, pats its belly, burps bubbles; a red vignette pulses around the view,
+  the context bar turns into moving yellow-red hazard stripes, the percentage trembles, glowing cracks appear on its body.
+  The longer it stays full, the higher the tension (3 levels: 0–8s, 8–20s, >20s): more cracks, stronger shaking, faster breathing.
+  Every so often it **swells up, flashes white faster and faster and the whole view shakes**, throws off debris… then barely holds it in: "phew…".
+  On `/compact` from 100%: **💥 POP**: white flash, shockwave, pixel debris flying everywhere, then it springs back tiny: "…I'm okay!"
+- **compacting**: squeezes with its eyes shut; when done it burps, puffs up and shrinks, throws sparkles, backflips, smiles
+- **sleep** (no activity for 5 minutes): eyes closed, slow breathing, "Zzz"
+- **hibernate**: *Claude's prompt cache has expired* (1 hour after the last API call by default; the 5m/1h TTL is read from the transcript).
+  It puts on a nightcap, curls up, blows a snot bubble, and the view turns into a night sky with a moon and stars; the HUD shows `💤 cache cold`.
+  Poking it only makes it talk in its sleep ("5 more minutes…"); it wakes with a start only when a new message is sent to Claude.
+  While the cache is still warm, the HUD counts down `⚡ 42m`.
 
-## Chạy thử
-- Dev: mở thư mục này trong VS Code, bấm **F5**.
-- Cài hẳn (không cần build/npm): symlink vào thư mục extensions rồi Reload Window:
+## Try it
+- Development: open this folder in VS Code and press **F5**.
+- Install for real (no build or npm needed): symlink it into the extensions folder, then Reload Window:
   `ln -s "$PWD" ~/.vscode/extensions/local.claude-octopus-0.1.0`
-- Xem animation không cần VS Code: `python3 -m http.server 8765` rồi mở `http://localhost:8765/test/harness.html`.
+- Preview the animations without VS Code: `python3 -m http.server 8765`, then open `http://localhost:8765/test/harness.html`.
 
-## Theme theo mùa (`claudeOctopus.theme`, mặc định `auto`)
-| Theme | Khi nào (auto) | Trang phục & hành động |
+## Seasonal themes (`claudeOctopus.theme`, default `auto`)
+| Theme | When (auto) | Outfit & actions |
 |---|---|---|
-| 🐐 `messi` | 2–7/10/2026 (trận chia tay Argentina 6/10), 23–24/6, 18/12 | Áo sọc xanh-trắng, râu, băng đội trưởng, 3 ngôi sao, bóng dưới chân, khung thành; tâng bóng, sút "¡GOLAZO!", ăn mừng 🐐; compact xong nâng cúp 🏆 |
-| 💐 `women` | 17–21/10 (20/10), 6–9/3 (8/3) | Vòng hoa trên đầu, cầm hoa hồng, cánh hoa rơi; tặng hoa 🌹, ngại ngùng |
-| 🎄 `christmas` | 15–26/12 | Mũ Noel, tuyết rơi, cây thông + hộp quà; "Ho ho ho!", tặng quà 🎁, hát jingle bells |
-| 🧧 `tet` | 7 ngày trước đến 7 ngày sau mùng 1 (2026–2035) | Đèn lồng đung đưa, cầm lì xì, hoa mai rơi, pháo hoa; "Lì xì nè!" |
+| 🐐 `messi` | 2–7 Oct 2026 (Argentina farewell match on 6 Oct), 23–24 Jun, 18 Dec | Sky-blue and white striped jersey, beard, captain's armband, three stars, a ball at its feet, a goal; juggles, shoots "GOOOAL!", celebrates 🐐; lifts the trophy 🏆 after a compact |
+| 💐 `women` | 17–21 Oct (Vietnamese Women's Day, 20 Oct), 6–9 Mar (International Women's Day) | Flower crown, holds a rose, falling petals; gives flowers 🌹, gets shy |
+| 🎄 `christmas` | 15–26 Dec | Santa hat, falling snow, a tree and a present; "Ho ho ho!", gives gifts 🎁, sings jingle bells |
+| 🧧 `tet` | 7 days before to 7 days after Lunar New Year's day (2026–2035) | Swaying lanterns, holds a red envelope, falling apricot blossoms, fireworks; "a red envelope for you! 🧧" |
 
-HUD có thêm dải băng theo theme. Sự kiện ngắn thắng mùa dài (18/12 là Messi dù đang mùa Noel).
-Đặt `theme` thành `none` để tắt, hoặc chọn thẳng một theme. Thêm ngày riêng bằng `claudeOctopus.themeDates`:
-`[{ "theme": "messi", "from": "2026-10-03", "to": "2026-10-07" }]` (ngày dạng `YYYY-MM-DD`, hoặc `MM-DD` để lặp hằng năm).
+The HUD also shows a themed banner. Short events beat long seasons (18 Dec is Messi even during the Christmas season).
+Set `theme` to `none` to turn themes off, or pick one directly. Add your own dates with `claudeOctopus.themeDates`:
+`[{ "theme": "messi", "from": "2026-10-03", "to": "2026-10-07" }]` (dates as `YYYY-MM-DD`, or `MM-DD` to repeat every year).
 
-## Không làm phiền khi đang code
-| Setting | Mặc định | Ý nghĩa |
+## Stay out of the way while coding
+| Setting | Default | Meaning |
 |---|---|---|
-| `claudeOctopus.motion` | `calm` | `lively`: đầy đủ hiệu ứng (có chớp khi 100%) · `calm`: không chớp, không rung view, ít trò hơn · `minimal`: gần như đứng yên, chỉ thở, đổi size và màu |
-| `claudeOctopus.quietWhileTyping` | `true` | Bạn gõ trong editor thì nó đứng yên 6 giây: không hạt, không thoại, không đi lại |
-| `claudeOctopus.size` | `1` | Hệ số kích thước (0.3–2). Vẫn lớn dần theo context, nhưng không vượt khung view |
-| `claudeOctopus.location` | `activitybar` | `activitybar` · `explorer` (một mục nhỏ trong Explorer) · `panel` (tab cạnh Terminal) · `hidden` (chỉ status bar) |
-| `claudeOctopus.showSpeech` | `true` | Tắt bong bóng thoại (cảnh báo đầy context vẫn hiện) |
-| `claudeOctopus.showStatusBar` | `true` | Ẩn hoặc hiện `42%` trên status bar |
+| `claudeOctopus.motion` | `calm` | `lively`: every effect (including flashing at 100%) · `calm`: no flashing, no view shaking, fewer antics · `minimal`: almost still, only breathing, size and colour |
+| `claudeOctopus.quietWhileTyping` | `true` | While you type in the editor it holds still for 6 seconds: no particles, speech or wandering |
+| `claudeOctopus.size` | `1` | Size multiplier (0.3–2). It still grows with the context, but never outgrows the view |
+| `claudeOctopus.location` | `activitybar` | `activitybar` · `explorer` (a small section in the Explorer) · `panel` (a tab next to the Terminal) · `hidden` (status bar only) |
+| `claudeOctopus.showSpeech` | `true` | Turn off speech bubbles (the context-full alert is always shown) |
+| `claudeOctopus.showStatusBar` | `true` | Show or hide `42%` in the status bar |
 
-Lệnh **Claude Octopus: Cycle Motion Level** chuyển nhanh `lively → calm → minimal`.
-Hệ điều hành đang bật *Reduce motion* thì mọi animation lặp sẽ bị tắt.
+The **Claude Octopus: Cycle Motion Level** command switches quickly between `lively → calm → minimal`.
+When the operating system has *Reduce motion* turned on, all looping animations are disabled.
 
 ## Settings
 `claudeOctopus.contextWindow`, `compactThreshold`, `sessionSource` (`workspace`/`latest`),
-`terminalNamePattern`, `confirmBelowThreshold`, `sleepAfterMinutes`, `cacheTtl` (`auto`/`5m`/`1h`), `theme`, `themeDates`, `vibeAfterSeconds`, `boredAfterSeconds`, cùng các setting ở mục trên.
+`terminalNamePattern`, `confirmBelowThreshold`, `sleepAfterMinutes`, `cacheTtl` (`auto`/`5m`/`1h`), `theme`, `themeDates`, `vibeAfterSeconds`, `boredAfterSeconds`, plus the settings in the section above.

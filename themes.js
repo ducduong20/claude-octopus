@@ -1,7 +1,7 @@
 // @ts-check
 // Seasonal themes: which one is active on a given (local) date.
 
-// Tết Nguyên Đán (mùng 1) for upcoming years, Vietnamese calendar.
+// Lunar New Year (Tet) day one for upcoming years, Vietnamese calendar.
 const TET = {
   2026: '02-17',
   2027: '02-06',
@@ -23,7 +23,7 @@ const BUILT_IN = [
   { theme: 'messi', year: 2026, date: '10-06', before: 4, after: 1 },
   { theme: 'messi', date: '06-24', before: 1, after: 0 }, // birthday
   { theme: 'messi', date: '12-18', before: 0, after: 0 }, // 2022 World Cup final
-  { theme: 'women', date: '10-20', before: 3, after: 1 }, // Ngày Phụ nữ Việt Nam
+  { theme: 'women', date: '10-20', before: 3, after: 1 }, // Vietnamese Women's Day
   { theme: 'women', date: '03-08', before: 2, after: 1 }, // International Women's Day
   { theme: 'christmas', date: '12-25', before: 10, after: 1 },
   ...Object.entries(TET).map(([year, date]) => ({ theme: 'tet', year: Number(year), date, before: 7, after: 7 })),
