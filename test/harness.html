@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Octopus Harness</title>
+<link rel="stylesheet" href="../media/octopus.css">
+<style>
+  body { background: #1e1e1e; color: #ccc; --vscode-foreground: #ccc; font: 13px sans-serif; display: flex; gap: 12px; padding: 8px; }
+  #wrap { width: 300px; height: 440px; border: 1px solid #444; flex: none; }
+  button { margin: 2px; }
+  pre { font-size: 11px; opacity: 0.7; }
+</style>
+</head>
+<body>
+<div id="wrap"></div>
+<div>
+  <div>Context:
+    <button onclick="setPct(0.05)">5%</button><button onclick="setPct(0.3)">30%</button><button onclick="setPct(0.6)">60%</button>
+    <button onclick="setPct(0.8)">80%</button><button onclick="setPct(0.95)">95%</button><button onclick="setPct(1)">100%</button>
+  </div>
+  <div>Session:
+    <button onclick="patch({ lastWrite: Date.now() })">working</button>
+    <button onclick="patch({ lastWrite: Date.now() - 60000 })">idle</button>
+    <button onclick="patch({ lastWrite: Date.now() - 900000 })">sleep</button>
+    <button onclick="setPct(0.08, true)">compacted</button>
+    <button onclick="feedDemo()">feed</button>
+    <button onclick="patch({ lastApiAt: Date.now() - 3600000 + 125000, lastWrite: Date.now() - 60000 })">cache 2m left</button>
+    <button onclick="patch({ lastApiAt: Date.now() - 3700000, lastWrite: Date.now() - 3700000 })">cache expired</button>
+    <button onclick="patch({ lastApiAt: Date.now(), lastWrite: Date.now() })">new message</button>
+    <button onclick="vibeDemo()">vibe (long work)</button>
+    <button onclick="clearInterval(vibeTimer); patch({ lastWrite: Date.now() - 120000, lastApiAt: Date.now() - 120000 })">bored</button>
+  </div>
+  <div>Prefs:
+    <button onclick="setPrefs({ motion: 'lively' })">lively</button>
+    <button onclick="setPrefs({ motion: 'calm' })">calm</button>
+    <button onclick="setPrefs({ motion: 'minimal' })">minimal</button>
+    <button onclick="setPrefs({ size: 0.6 })">size 0.6</button>
+    <button onclick="setPrefs({ size: 1 })">size 1</button>
+    <button onclick="setPrefs({ size: 1.6 })">size 1.6</button>
+    <button onclick="post({ type: 'hush', ms: 6000 })">hush (typing)</button>
+  </div>
+  <div>Theme:
+    <button onclick="setPrefs({ theme: null })">none</button>
+    <button onclick="setPrefs({ theme: 'messi' })">messi</button>
+    <button onclick="setPrefs({ theme: 'women' })">20/10</button>
+    <button onclick="setPrefs({ theme: 'christmas' })">noel</button>
+    <button onclick="setPrefs({ theme: 'tet' })">tết</button>
+  </div>
+  <div>Actions: <span id="acts"></span></div>
+  <pre id="log"></pre>
+</div>
+<script>
+  let s = {
+    found: true, sessionId: '188e6e20abcd', project: '-Users-duc-duong-Developer-extendsions', model: 'claude-opus-5-5',
+    used: 60000, window: 200000, pct: 0.3, compacted: false, lastWrite: Date.now() - 60000,
+    threshold: 0.75, full: 0.9, sleepAfterMs: 300000,
+    prefs: { motion: 'calm', size: 1, speech: true },
+    cacheTtlMs: 3600000, lastApiAt: Date.now() - 60000,
+  };
+  let vibeTimer = 0;
+  // Claude "keeps writing" for 30s; vibe kicks in after 2s instead of 60s.
+  const vibeDemo = () => {
+    clearInterval(vibeTimer);
+    patch({ vibeAfterMs: 2000, lastWrite: Date.now(), lastApiAt: Date.now() });
+    let n = 0;
+    vibeTimer = setInterval(() => (++n > 10 ? clearInterval(vibeTimer) : patch({ lastWrite: Date.now(), lastApiAt: Date.now() })), 3000);
+  };
+  const setPrefs = (p) => patch({ prefs: { ...s.prefs, ...p } });
+  const post = (m) => window.postMessage(m, '*');
+  const feedDemo = () => {
+    post({ type: 'feed', items: [
+      { k: 'prompt', t: 'fix the login bug' }, { k: 'think', t: 'idea' }, { k: 'search', t: 'handleLogin' },
+      { k: 'file', t: 'auth.ts' }, { k: 'cmd', t: 'Run unit tests' }, { k: 'web', t: 'developer.moz…' },
+      { k: 'edit', t: 'auth.ts' },
+    ] });
+    setTimeout(() => setPct(Math.min(1, s.pct + 0.08)), 400);
+  };
+  const patch = (p) => { s = { ...s, ...p }; post({ type: 'state', state: s }); };
+  const setPct = (p, c) => patch({ pct: p, used: Math.round(p * s.window), compacted: !!c, lastWrite: Date.now() - 60000, lastApiAt: Date.now() - 60000 });
+  window.acquireVsCodeApi = () => ({
+    postMessage: (m) => {
+      document.getElementById('log').textContent += JSON.stringify(m) + '\n';
+      if (m.type === 'ready') post({ type: 'state', state: s });
+      if (m.type === 'compact') post({ type: 'compacting' });
+    },
+  });
+
+  (async () => {
+    // Reuse the exact markup the extension ships.
+    const src = await (await fetch('../extension.js')).text();
+    document.getElementById('wrap').innerHTML = src.match(/const BODY = `([\s\S]*?)`;/)[1];
+    const js = document.createElement('script');
+    js.src = '../media/octopus.js';
+    js.onload = () => {
+      for (const k of Object.keys(window.__octopus)) {
+        const b = document.createElement('button');
+        b.textContent = k;
+        b.onclick = () => (k === 'feed' ? feedDemo() : window.__octopus[k]());
+        document.getElementById('acts').appendChild(b);
+      }
+    };
+    document.body.appendChild(js);
+  })();
+</script>
+</body>
+</html>

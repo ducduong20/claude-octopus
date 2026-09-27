@@ -1,0 +1,265 @@
+{
+  "name": "claude-octopus",
+  "displayName": "Claude Octopus — Context Meter",
+  "description": "A pixel Claude mascot that grows as your Claude Code session's context fills up. Click it to /compact.",
+  "version": "0.1.0",
+  "publisher": "local",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other",
+    "Visualization"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "claudeOctopus",
+          "title": "Claude Octopus",
+          "icon": "media/icon.svg"
+        }
+      ],
+      "panel": [
+        {
+          "id": "claudeOctopusPanel",
+          "title": "Claude Octopus",
+          "icon": "media/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "claudeOctopus": [
+        {
+          "type": "webview",
+          "id": "claudeOctopus.view",
+          "name": "Context",
+          "when": "config.claudeOctopus.location == 'activitybar'"
+        }
+      ],
+      "explorer": [
+        {
+          "type": "webview",
+          "id": "claudeOctopus.explorerView",
+          "name": "Claude Context",
+          "when": "config.claudeOctopus.location == 'explorer'"
+        }
+      ],
+      "claudeOctopusPanel": [
+        {
+          "type": "webview",
+          "id": "claudeOctopus.panelView",
+          "name": "Context",
+          "when": "config.claudeOctopus.location == 'panel'"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "claudeOctopus.compact",
+        "title": "Claude Octopus: Run /compact"
+      },
+      {
+        "command": "claudeOctopus.refresh",
+        "title": "Claude Octopus: Refresh"
+      },
+      {
+        "command": "claudeOctopus.pickTerminal",
+        "title": "Claude Octopus: Choose Claude Terminal"
+      },
+      {
+        "command": "claudeOctopus.cycleMotion",
+        "title": "Claude Octopus: Cycle Motion Level (lively / calm / minimal)"
+      }
+    ],
+    "configuration": {
+      "title": "Claude Octopus",
+      "properties": {
+        "claudeOctopus.contextWindow": {
+          "type": "number",
+          "default": 200000,
+          "description": "Context window size in tokens. Switches to 1,000,000 automatically if usage exceeds this value."
+        },
+        "claudeOctopus.compactThreshold": {
+          "type": "number",
+          "default": 0.75,
+          "minimum": 0.1,
+          "maximum": 1,
+          "description": "Fraction of the context window at which the octopus counts as 'full' and a single click runs /compact."
+        },
+        "claudeOctopus.sessionSource": {
+          "type": "string",
+          "enum": [
+            "workspace",
+            "latest"
+          ],
+          "enumDescriptions": [
+            "Most recently active session of the open workspace folder(s); falls back to the latest session anywhere.",
+            "Most recently active Claude Code session in any project."
+          ],
+          "default": "workspace"
+        },
+        "claudeOctopus.terminalNamePattern": {
+          "type": "string",
+          "default": "claude",
+          "description": "Case-insensitive regex used to find the terminal that runs Claude Code."
+        },
+        "claudeOctopus.confirmBelowThreshold": {
+          "type": "boolean",
+          "default": true,
+          "description": "Ask before running /compact when the context is still below the threshold (double-click)."
+        },
+        "claudeOctopus.sleepAfterMinutes": {
+          "type": "number",
+          "default": 5,
+          "description": "The octopus falls asleep after this many minutes without session activity."
+        },
+        "claudeOctopus.motion": {
+          "type": "string",
+          "enum": [
+            "lively",
+            "calm",
+            "minimal"
+          ],
+          "default": "calm",
+          "order": 0,
+          "enumDescriptions": [
+            "All animations, including the flashing 'about to burst' effects at 100%.",
+            "No flashing or view shaking; slower pulses and fewer idle antics. Easy on the eyes while coding.",
+            "Almost still: only size, colour and gentle breathing. No particles or wandering."
+          ],
+          "description": "How much the octopus moves."
+        },
+        "claudeOctopus.size": {
+          "type": "number",
+          "default": 1,
+          "minimum": 0.3,
+          "maximum": 2,
+          "order": 1,
+          "description": "Size multiplier for the octopus (it still grows with the context inside this size, and never outgrows the view)."
+        },
+        "claudeOctopus.location": {
+          "type": "string",
+          "enum": [
+            "activitybar",
+            "explorer",
+            "panel",
+            "hidden"
+          ],
+          "default": "activitybar",
+          "order": 2,
+          "enumDescriptions": [
+            "Its own icon in the Activity Bar.",
+            "A small section inside the Explorer sidebar.",
+            "A tab in the bottom panel, next to the terminal.",
+            "No view at all — only the status bar item."
+          ],
+          "description": "Where the octopus lives."
+        },
+        "claudeOctopus.quietWhileTyping": {
+          "type": "boolean",
+          "default": true,
+          "order": 3,
+          "description": "Hold still (no particles, speech or wandering) for a few seconds after every edit you make."
+        },
+        "claudeOctopus.showSpeech": {
+          "type": "boolean",
+          "default": true,
+          "order": 4,
+          "description": "Show speech bubbles. Important alerts (context full) are always shown."
+        },
+        "claudeOctopus.showStatusBar": {
+          "type": "boolean",
+          "default": true,
+          "order": 5,
+          "description": "Show the context percentage in the status bar."
+        },
+        "claudeOctopus.cacheTtl": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "5m",
+            "1h"
+          ],
+          "default": "auto",
+          "order": 6,
+          "enumDescriptions": [
+            "Detect from the transcript (which cache bucket Claude wrote to); falls back to 1 hour.",
+            "5-minute prompt cache.",
+            "1-hour prompt cache."
+          ],
+          "description": "How long Claude's prompt cache lives. Once it expires the octopus goes into deep sleep: the next message has to re-read the whole context."
+        },
+        "claudeOctopus.theme": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "none",
+            "messi",
+            "women",
+            "christmas",
+            "tet"
+          ],
+          "default": "auto",
+          "order": 7,
+          "enumDescriptions": [
+            "Pick by date: Messi farewell (6/10/2026), birthday 24/6 and 18/12 · 20/10 and 8/3 · Christmas · Tết Nguyên Đán.",
+            "Never dress up.",
+            "Argentina jersey, beard, captain armband, football and three stars. GOAT 🐐",
+            "Flower crown, a rose and falling petals for 20/10 and 8/3.",
+            "Santa hat, snow and presents.",
+            "Lanterns, lì xì and apricot blossoms for Tết."
+          ],
+          "description": "Seasonal outfit for the octopus."
+        },
+        "claudeOctopus.themeDates": {
+          "type": "array",
+          "default": [],
+          "order": 8,
+          "markdownDescription": "Extra dates for themes (they win over built-in ones). Dates are `YYYY-MM-DD` or yearly `MM-DD`, e.g. `[{ \"theme\": \"messi\", \"from\": \"2026-10-03\", \"to\": \"2026-10-07\" }]`.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "theme": {
+                "type": "string",
+                "enum": [
+                  "messi",
+                  "women",
+                  "christmas",
+                  "tet"
+                ]
+              },
+              "from": {
+                "type": "string"
+              },
+              "to": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "theme",
+              "from"
+            ]
+          }
+        },
+        "claudeOctopus.vibeAfterSeconds": {
+          "type": "number",
+          "default": 60,
+          "order": 9,
+          "description": "After Claude has been working non-stop this long, the octopus switches to vibe mode: sunglasses, headphones and bubble tea while you wait."
+        },
+        "claudeOctopus.boredAfterSeconds": {
+          "type": "number",
+          "default": 90,
+          "order": 10,
+          "description": "After this long without any session activity the octopus gets bored (before it eventually falls asleep)."
+        }
+      }
+    }
+  }
+}
