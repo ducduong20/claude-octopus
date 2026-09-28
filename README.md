@@ -1,13 +1,13 @@
-# Claude Octopus: a context meter for Claude Code
+# Claude Octopus
 
-A pixel Claude mascot that lives in the VS Code Activity Bar and **grows as the context of your running Claude Code session fills up**.
+*Unofficial.* A context meter for Claude Code: a pixel mascot that lives in the VS Code Activity Bar and **grows as the context of your running Claude Code session fills up**.
 When the context is full, **click it to run `/compact`**.
 
 ## How it works
 - Reads the transcript `~/.claude/projects/<project>/<session>.jsonl` of the most recent session in the workspace and takes the `usage`
   of the latest assistant message: `input + cache_creation + cache_read + output`, divided by the context window (200k by default, switching to 1M automatically when exceeded).
 - `/compact` is sent to the terminal running `claude` (matched by terminal name, or you pick one).
-  If no terminal is found, `/compact` is copied to the clipboard instead.
+  If no terminal is chosen, you can copy `/compact` with one click and paste it into Claude yourself.
 
 ## Interactions
 | Action | Result |
@@ -86,3 +86,7 @@ When the operating system has *Reduce motion* turned on, all looping animations 
 ## Settings
 `claudeOctopus.contextWindow`, `compactThreshold`, `sessionSource` (`workspace`/`latest`),
 `terminalNamePattern`, `confirmBelowThreshold`, `sleepAfterMinutes`, `cacheTtl` (`auto`/`5m`/`1h`), `theme`, `themeDates`, `vibeAfterSeconds`, `boredAfterSeconds`, `knowledgeLabels`, plus the settings in the section above.
+
+---
+
+Not affiliated with or endorsed by Anthropic. Claude and Claude Code are trademarks of Anthropic, PBC.
