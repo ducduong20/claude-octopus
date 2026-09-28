@@ -1,0 +1,6 @@
+.git/**
+.gitignore
+.vscode/**
+test/**
+**/*.vsix
+**/.DS_Store

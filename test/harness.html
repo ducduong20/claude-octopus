@@ -89,6 +89,7 @@
     // Reuse the exact markup the extension ships.
     const src = await (await fetch('../extension.js')).text();
     document.getElementById('wrap').innerHTML = src.match(/const BODY = `([\s\S]*?)`;/)[1];
+    window.__OCTOPUS_TEST__ = true;
     const js = document.createElement('script');
     js.src = '../media/octopus.js';
     js.onload = () => {

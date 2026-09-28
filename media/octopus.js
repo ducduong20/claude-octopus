@@ -159,8 +159,26 @@
     lookUntil = Date.now() + ms;
   }
 
-  function showBubble(html, cls) {
-    bubble.innerHTML = html;
+  function makeDots() {
+    const dots = document.createElement('span');
+    dots.className = 'dots';
+    for (let i = 0; i < 3; i++) {
+      const dot = document.createElement('span');
+      dot.textContent = '•';
+      dots.appendChild(dot);
+    }
+    return dots;
+  }
+
+  // Built from DOM nodes and textContent only, so no string can ever be parsed as HTML.
+  function showBubble(text, cls, dots = false) {
+    bubble.replaceChildren();
+    if (text) {
+      const span = document.createElement('span');
+      span.textContent = text;
+      bubble.appendChild(span);
+    }
+    if (dots) bubble.appendChild(makeDots());
     bubble.className = 'show ' + (cls || '');
   }
 
@@ -168,24 +186,21 @@
     if (!prefs.speech && cls !== 'alert') return;
     if (hushed() && cls !== 'alert') return;
     clearTimeout(sayTimer);
-    const span = document.createElement('span');
-    span.textContent = text;
-    showBubble(span.outerHTML, cls);
+    showBubble(text, cls);
     sayTimer = setTimeout(restoreSticky, ms);
   }
 
-  function setSticky(html, cls) {
-    sticky = html ? { html, cls } : null;
+  /** A bubble that stays up while a mood lasts (null clears it). */
+  function setSticky(text, cls = '', dots = false) {
+    sticky = text || dots ? { text, cls, dots } : null;
     clearTimeout(sayTimer);
     restoreSticky();
   }
 
   function restoreSticky() {
-    if (sticky) showBubble(sticky.html, sticky.cls);
+    if (sticky) showBubble(sticky.text, sticky.cls, sticky.dots);
     else bubble.className = '';
   }
-
-  const DOTS = '<span class="dots"><span>•</span><span>•</span><span>•</span></span>';
 
   // ---------------------------------------------------------------- particles
 
@@ -906,10 +921,10 @@
     mood = m;
     critter.title = pct >= (state ? state.threshold : 1) ? 'Click to /compact' : 'Double-click to /compact';
 
-    if (m === 'stuffed') setSticky(`<span>${pick(LINES.stuffed)}</span>`, 'alert');
-    else if (m === 'panic') setSticky(`<span>${pick(LINES.panic)}</span>`, 'alert');
-    else if (m === 'compacting') setSticky(`<span>compacting ${DOTS}</span>`);
-    else if (m === 'working') setSticky(DOTS, 'think');
+    if (m === 'stuffed') setSticky(pick(LINES.stuffed), 'alert');
+    else if (m === 'panic') setSticky(pick(LINES.panic), 'alert');
+    else if (m === 'compacting') setSticky('compacting ', '', true);
+    else if (m === 'working') setSticky('', 'think', true);
     else setSticky(null);
 
     if (prev === 'sleep' && m !== 'sleep' && m !== 'hibernate' && state && state.found) {
@@ -1207,7 +1222,7 @@
     const newTheme = p.theme !== prefs.theme;
     prefs = { ...prefs, ...p };
     stage.classList.remove('motion-lively', 'motion-calm', 'motion-minimal');
-    stage.classList.add('motion-' + prefs.motion);
+    stage.classList.add('motion-' + (['lively', 'calm', 'minimal'].includes(prefs.motion) ? prefs.motion : 'calm'));
     if (newTheme) {
       for (const k of Object.keys(THEMES)) stage.classList.remove('theme-' + k);
       const t = THEMES[prefs.theme];
@@ -1242,7 +1257,8 @@
 
     $('pct').textContent = s.compacted ? 'compacted' : `${(pct * 100).toFixed(pct < 0.1 ? 1 : 0)}%`;
     $('tokens').textContent = `${fmt(s.used)} / ${fmt(s.window)}`;
-    $('session').textContent = s.project.replace(/^-/, '').split('-').slice(-2).join('/') + ' · ' + s.sessionId.slice(0, 8);
+    $('session').textContent =
+      String(s.project || '').replace(/^-/, '').split('-').slice(-2).join('/') + ' · ' + String(s.sessionId || '').slice(0, 8);
     renderCache();
     $('fill').style.width = pct * 100 + '%';
     $('mark').style.left = `calc(${s.threshold * 100}% - 1px)`;
@@ -1276,10 +1292,12 @@
 
   window.addEventListener('message', (e) => {
     const m = e.data;
-    if (m.type === 'state') applyState(m.state);
-    else if (m.type === 'feed') feed(m.items);
-    else if (m.type === 'hush') {
-      hushUntil = Date.now() + m.ms;
+    if (!m || typeof m !== 'object') return;
+    if (m.type === 'state' && m.state && typeof m.state === 'object') applyState(m.state);
+    else if (m.type === 'feed' && Array.isArray(m.items)) {
+      feed(m.items.filter((it) => it && typeof it.k === 'string').map((it) => ({ k: it.k, t: String(it.t || '').slice(0, 40) })));
+    } else if (m.type === 'hush') {
+      hushUntil = Date.now() + clamp(Number(m.ms) || 0, 0, 60000);
       stage.classList.add('hush');
     }
     else if (m.type === 'compacting') startCompacting();
@@ -1289,8 +1307,8 @@
     }
   });
 
-  // Lets test/harness.html trigger individual behaviours.
-  /** @type {any} */ (window).__octopus = { cheers, sip, rollEyes, playGame, bubblegum, melt, juggle, shoot, goat, giveThemed, themeCheer, swellUp, bigBang: () => { wasStuffed = true; return celebrate(); }, feed, butterfly, sitDown, hum, sneeze, wink, shy, headpat, poke, celebrate, backflip: () => play('backflip', 1000) };
+  // Lets test/harness.html trigger individual behaviours; never exposed inside VS Code.
+  if (/** @type {any} */ (window).__OCTOPUS_TEST__) /** @type {any} */ (window).__octopus = { cheers, sip, rollEyes, playGame, bubblegum, melt, juggle, shoot, goat, giveThemed, themeCheer, swellUp, bigBang: () => { wasStuffed = true; return celebrate(); }, feed, butterfly, sitDown, hum, sneeze, wink, shy, headpat, poke, celebrate, backflip: () => play('backflip', 1000) };
 
   layout();
   scheduleBlink();

@@ -75,6 +75,14 @@ Set `theme` to `none` to turn themes off, or pick one directly. Add your own dat
 The **Claude Octopus: Cycle Motion Level** command switches quickly between `lively → calm → minimal`.
 When the operating system has *Reduce motion* turned on, all looping animations are disabled.
 
+## Privacy & security
+- **Local only.** The extension makes no network requests; the view's Content Security Policy blocks every connection, image and form.
+- **Reads, never writes, your transcripts.** Only token counts, timestamps and short labels leave the transcript reader; message text and tool results are never passed on.
+- **Labels are redacted.** Raw Bash command lines are never shown (only Claude's description of the command), and anything that looks like a key, token or password is masked as `•••`. Set `claudeOctopus.knowledgeLabels` to `false` to show icons only, e.g. while screen sharing.
+- **No API for other extensions.** Nothing is exported and no command returns data.
+- **Typing into terminals.** `/compact` is only typed into the terminal you picked, or the single terminal whose name matches `terminalNamePattern`; otherwise you are asked. That setting and `sessionSource` can only be set in user settings, never by a workspace, and are restricted in untrusted workspaces.
+- **Clipboard.** Only written when you click *Copy /compact*.
+
 ## Settings
 `claudeOctopus.contextWindow`, `compactThreshold`, `sessionSource` (`workspace`/`latest`),
-`terminalNamePattern`, `confirmBelowThreshold`, `sleepAfterMinutes`, `cacheTtl` (`auto`/`5m`/`1h`), `theme`, `themeDates`, `vibeAfterSeconds`, `boredAfterSeconds`, plus the settings in the section above.
+`terminalNamePattern`, `confirmBelowThreshold`, `sleepAfterMinutes`, `cacheTtl` (`auto`/`5m`/`1h`), `theme`, `themeDates`, `vibeAfterSeconds`, `boredAfterSeconds`, `knowledgeLabels`, plus the settings in the section above.

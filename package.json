@@ -3,7 +3,7 @@
   "displayName": "Claude Octopus — Context Meter",
   "description": "A pixel Claude mascot that grows as your Claude Code session's context fills up. Click it to /compact.",
   "version": "0.1.0",
-  "publisher": "local",
+  "publisher": "ducduong20",
   "license": "MIT",
   "engines": {
     "vscode": "^1.85.0"
@@ -102,12 +102,14 @@
             "Most recently active session of the open workspace folder(s); falls back to the latest session anywhere.",
             "Most recently active Claude Code session in any project."
           ],
-          "default": "workspace"
+          "default": "workspace",
+          "scope": "application"
         },
         "claudeOctopus.terminalNamePattern": {
           "type": "string",
           "default": "claude",
-          "description": "Case-insensitive regex used to find the terminal that runs Claude Code."
+          "description": "Case-insensitive regex used to find the terminal that runs Claude Code. If no single terminal matches you are asked to pick one. User settings only: a workspace cannot change it.",
+          "scope": "application"
         },
         "claudeOctopus.confirmBelowThreshold": {
           "type": "boolean",
@@ -258,8 +260,37 @@
           "default": 90,
           "order": 10,
           "description": "After this long without any session activity the octopus gets bored (before it eventually falls asleep)."
+        },
+        "claudeOctopus.knowledgeLabels": {
+          "type": "boolean",
+          "default": true,
+          "order": 11,
+          "description": "Show short labels (file names, command descriptions, the start of your prompt) on the knowledge chips the octopus eats. Anything that looks like a secret is always masked; turn this off to show icons only, e.g. while screen sharing."
         }
       }
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ducduong20/claude-octopus.git"
+  },
+  "icon": "media/icon.png",
+  "keywords": [
+    "claude",
+    "claude code",
+    "context",
+    "compact",
+    "tokens",
+    "mascot"
+  ],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": "limited",
+      "description": "In Restricted Mode the settings that choose which terminal /compact is typed into and which sessions are read cannot be set by the workspace.",
+      "restrictedConfigurations": [
+        "claudeOctopus.terminalNamePattern",
+        "claudeOctopus.sessionSource"
+      ]
     }
   }
 }

@@ -1,6 +1,7 @@
 // @ts-check
 const vscode = require('vscode');
 const path = require('path');
+const crypto = require('crypto');
 const { findTranscript, readContext, readNewItems } = require('./transcript');
 const { activeTheme } = require('./themes');
 
@@ -16,21 +17,59 @@ const VIEW_IDS = {
 
 const cfg = () => vscode.workspace.getConfiguration('claudeOctopus');
 
+// settings.json values are not type-checked by VS Code, and workspace settings come from whatever
+// repository is open, so every value is validated and clamped before use.
+function num(c, key, def, min, max) {
+  const v = c.get(key, def);
+  return typeof v === 'number' && Number.isFinite(v) ? Math.min(max, Math.max(min, v)) : def;
+}
+function oneOf(c, key, def, allowed) {
+  const v = c.get(key, def);
+  return allowed.includes(v) ? v : def;
+}
+function bool(c, key, def) {
+  const v = c.get(key, def);
+  return typeof v === 'boolean' ? v : def;
+}
+
+function settings() {
+  const c = cfg();
+  const themeDates = c.get('themeDates', []);
+  return {
+    contextWindow: num(c, 'contextWindow', 200000, 1000, 10000000),
+    compactThreshold: num(c, 'compactThreshold', 0.75, 0.1, 1),
+    sessionSource: oneOf(c, 'sessionSource', 'workspace', ['workspace', 'latest']),
+    terminalNamePattern: String(c.get('terminalNamePattern', 'claude') || 'claude').slice(0, 100),
+    confirmBelowThreshold: bool(c, 'confirmBelowThreshold', true),
+    sleepAfterMinutes: num(c, 'sleepAfterMinutes', 5, 1, 1440),
+    vibeAfterSeconds: num(c, 'vibeAfterSeconds', 60, 5, 3600),
+    boredAfterSeconds: num(c, 'boredAfterSeconds', 90, 10, 3600),
+    cacheTtl: oneOf(c, 'cacheTtl', 'auto', ['auto', '5m', '1h']),
+    motion: oneOf(c, 'motion', 'calm', ['lively', 'calm', 'minimal']),
+    size: num(c, 'size', 1, 0.3, 2),
+    location: oneOf(c, 'location', 'activitybar', ['activitybar', 'explorer', 'panel', 'hidden']),
+    quietWhileTyping: bool(c, 'quietWhileTyping', true),
+    showSpeech: bool(c, 'showSpeech', true),
+    showStatusBar: bool(c, 'showStatusBar', true),
+    knowledgeLabels: bool(c, 'knowledgeLabels', true),
+    theme: oneOf(c, 'theme', 'auto', ['auto', 'none', 'messi', 'women', 'christmas', 'tet']),
+    themeDates: Array.isArray(themeDates) ? themeDates.slice(0, 50) : [],
+  };
+}
+
 /** How long Claude's prompt cache stays warm after the last API call. */
-function cacheTtlMs(c, ctx) {
-  const setting = c.get('cacheTtl', 'auto');
-  if (setting === '5m') return 5 * 60000;
-  if (setting === '1h') return 60 * 60000;
+function cacheTtlMs(st, ctx) {
+  if (st.cacheTtl === '5m') return 5 * 60000;
+  if (st.cacheTtl === '1h') return 60 * 60000;
   return ((ctx && ctx.ttl) || 60) * 60000;
 }
 
-function prefs() {
-  const c = cfg();
+function prefs(st = settings()) {
   return {
-    motion: c.get('motion', 'calm'),
-    size: c.get('size', 1),
-    speech: c.get('showSpeech', true),
-    theme: activeTheme(new Date(), c.get('theme', 'auto'), c.get('themeDates', [])),
+    motion: st.motion,
+    size: st.size,
+    speech: st.showSpeech,
+    theme: activeTheme(new Date(), st.theme, st.themeDates),
   };
 }
 
@@ -44,33 +83,42 @@ class ContextMonitor {
     this.feedPos = 0;
     this.state = { found: false, prefs: prefs() };
     this.lastKey = '';
+    this.running = false;
     this.timer = setInterval(() => this.tick(), POLL_MS);
     this.tick();
   }
 
-  tick(force = false) {
-    const c = cfg();
+  /** Never overlaps itself: a slow disk simply skips a beat. */
+  async tick(force = false) {
+    if (this.running) return;
+    this.running = true;
+    try {
+      await this.poll(force);
+    } catch (e) {
+      console.error('[claude-octopus]', e instanceof Error ? e.message : e);
+    } finally {
+      this.running = false;
+    }
+  }
+
+  async poll(force) {
+    const st = settings();
     const folders = (vscode.workspace.workspaceFolders || []).map((f) => f.uri.fsPath);
-    const t = findTranscript(folders, c.get('sessionSource', 'workspace'));
+    const t = await findTranscript(folders, st.sessionSource);
     if (!t) {
-      if (this.state.found || force) this.publish({ found: false, prefs: prefs() });
+      if (this.state.found || force) this.publish({ found: false, prefs: prefs(st) });
       return;
     }
     const key = `${t.file}|${t.mtimeMs}|${t.size}|${new Date().toDateString()}`;
     if (key === this.lastKey && !force) return;
     this.lastKey = key;
-    this.feed(t);
+    await this.feed(t, st);
 
-    let ctx = null;
-    try {
-      ctx = readContext(t);
-    } catch (e) {
-      console.error('[claude-octopus]', e);
-    }
+    const ctx = await readContext(t);
     const used = ctx ? ctx.used : 0;
-    let windowSize = c.get('contextWindow', 200000);
-    if (used > windowSize || (ctx && ctx.model && /\[1m\]/i.test(ctx.model))) windowSize = 1000000;
-    const threshold = c.get('compactThreshold', 0.75);
+    let windowSize = st.contextWindow;
+    if (used > windowSize || (ctx && ctx.model && /\[1m\]/i.test(ctx.model))) windowSize = Math.max(windowSize, 1000000);
+    const threshold = st.compactThreshold;
 
     this.publish({
       found: true,
@@ -84,30 +132,28 @@ class ContextMonitor {
       lastWrite: t.mtimeMs,
       threshold,
       full: Math.max(PANIC_AT, threshold),
-      sleepAfterMs: c.get('sleepAfterMinutes', 5) * 60000,
-      vibeAfterMs: c.get('vibeAfterSeconds', 60) * 1000,
-      boredAfterMs: c.get('boredAfterSeconds', 90) * 1000,
+      sleepAfterMs: st.sleepAfterMinutes * 60000,
+      vibeAfterMs: st.vibeAfterSeconds * 1000,
+      boredAfterMs: st.boredAfterSeconds * 1000,
       lastApiAt: (ctx && ctx.at) || t.mtimeMs,
-      cacheTtlMs: cacheTtlMs(c, ctx),
-      prefs: prefs(),
+      cacheTtlMs: cacheTtlMs(st, ctx),
+      prefs: prefs(st),
     });
   }
 
   /** Reports what was appended to the transcript since the last poll (never replays history). */
-  feed(t) {
+  async feed(t, st) {
     if (t.file !== this.feedFile || t.size < this.feedPos) {
       this.feedFile = t.file;
       this.feedPos = t.size;
       return;
     }
     if (t.size === this.feedPos) return;
-    try {
-      const { items, next } = readNewItems(t.file, this.feedPos, t.size);
-      this.feedPos = next;
-      if (items.length) this.onFeed(items);
-    } catch (e) {
-      console.error('[claude-octopus]', e);
-    }
+    const { items, next } = await readNewItems(t.file, this.feedPos, t.size);
+    this.feedPos = next;
+    if (!items.length) return;
+    // With labels off, only the kind of thing eaten (an icon) reaches the view.
+    this.onFeed(st.knowledgeLabels ? items : items.map((it) => ({ k: it.k, t: '' })));
   }
 
   publish(s) {
@@ -134,11 +180,13 @@ class OctopusViewProvider {
   resolveWebviewView(view) {
     this.views.add(view);
     const media = vscode.Uri.joinPath(this.ctx.extensionUri, 'media');
-    view.webview.options = { enableScripts: true, localResourceRoots: [media] };
+    view.webview.options = { enableScripts: true, enableCommandUris: false, localResourceRoots: [media] };
     view.webview.html = this.html(view.webview, media);
     view.webview.onDidReceiveMessage((m) => {
+      // The view may only ask for state or a compact; anything else is ignored.
+      if (!m || typeof m !== 'object') return;
       if (m.type === 'ready') this.post({ type: 'state', state: this.getState() });
-      else this.onMessage(m);
+      else if (m.type === 'compact') this.onMessage({ type: 'compact', force: m.force === true });
     });
     view.onDidDispose(() => this.views.delete(view));
   }
@@ -149,14 +197,14 @@ class OctopusViewProvider {
 
   /** @param {vscode.Webview} webview @param {vscode.Uri} media */
   html(webview, media) {
-    const nonce = Array.from({ length: 24 }, () => Math.random().toString(36)[2]).join('');
+    const nonce = crypto.randomBytes(18).toString('base64');
     const css = webview.asWebviewUri(vscode.Uri.joinPath(media, 'octopus.css'));
     const js = webview.asWebviewUri(vscode.Uri.joinPath(media, 'octopus.js'));
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}';">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}'; img-src 'none'; connect-src 'none'; form-action 'none'; base-uri 'none';">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="${css}">
 <title>Claude Octopus</title>
@@ -333,19 +381,23 @@ const BODY = `<div id="stage" class="mood-sleep">
 /** @type {vscode.Terminal | undefined} */
 let chosenTerminal;
 
+/**
+ * The terminal to type /compact into: the one picked earlier, else one whose name matches the pattern.
+ * Anything else is always confirmed by the user, since typing into the wrong terminal (ssh, a database
+ * shell, an editor) would run '/compact' there.
+ */
 async function pickTerminal(forceAsk = false) {
   const terms = vscode.window.terminals;
   if (!forceAsk) {
     if (chosenTerminal && terms.includes(chosenTerminal)) return chosenTerminal;
     let re;
     try {
-      re = new RegExp(cfg().get('terminalNamePattern', 'claude'), 'i');
+      re = new RegExp(settings().terminalNamePattern, 'i');
     } catch {
       re = /claude/i;
     }
-    const match = terms.find((t) => re.test(t.name));
-    if (match) return match;
-    if (terms.length === 1) return terms[0];
+    const matches = terms.filter((t) => re.test(t.name.slice(0, 200)));
+    if (matches.length === 1) return matches[0];
   }
   if (!terms.length) return undefined;
   const pick = await vscode.window.showQuickPick(
@@ -359,7 +411,7 @@ async function pickTerminal(forceAsk = false) {
 /** @param {ContextMonitor} monitor @param {OctopusViewProvider} provider */
 async function runCompact(monitor, provider, force) {
   const s = monitor.state;
-  if (force && s.found && s.pct < s.threshold && cfg().get('confirmBelowThreshold', true)) {
+  if (force && s.found && s.pct < s.threshold && settings().confirmBelowThreshold) {
     const ok = await vscode.window.showInformationMessage(
       `Context is only ${Math.round(s.pct * 100)}% full. Run /compact anyway?`,
       { modal: true },
@@ -369,11 +421,13 @@ async function runCompact(monitor, provider, force) {
   }
   const term = await pickTerminal();
   if (!term) {
-    await vscode.env.clipboard.writeText('/compact');
     provider.post({ type: 'compactFailed', reason: 'no-terminal' });
-    vscode.window.showWarningMessage(
-      'No terminal running Claude Code found. "/compact" was copied to your clipboard — paste it into Claude.'
+    // The clipboard is only touched when the user asks for it.
+    const copy = await vscode.window.showWarningMessage(
+      'No terminal running Claude Code was chosen. Type /compact into Claude yourself, or copy it.',
+      'Copy /compact'
     );
+    if (copy) await vscode.env.clipboard.writeText('/compact');
     return;
   }
   term.show(false);
@@ -416,13 +470,13 @@ function activate(context) {
       const s = monitor.state;
       if (s.found && s.pct >= s.threshold) runCompact(monitor, provider, false);
       else {
-        const id = VIEW_IDS[cfg().get('location', 'activitybar')];
+        const id = VIEW_IDS[settings().location];
         if (id) vscode.commands.executeCommand(id + '.focus');
       }
     }),
     vscode.commands.registerCommand('claudeOctopus.cycleMotion', async () => {
       const order = ['lively', 'calm', 'minimal'];
-      const next = order[(order.indexOf(cfg().get('motion', 'calm')) + 1) % order.length];
+      const next = order[(order.indexOf(settings().motion) + 1) % order.length];
       await cfg().update('motion', next, vscode.ConfigurationTarget.Global);
       vscode.window.setStatusBarMessage(`Claude Octopus: motion → ${next}`, 2500);
     }),
@@ -433,7 +487,7 @@ function activate(context) {
     }),
     // Hold still while the developer is typing.
     vscode.workspace.onDidChangeTextDocument((e) => {
-      if (!e.contentChanges.length || !cfg().get('quietWhileTyping', true)) return;
+      if (!e.contentChanges.length || !settings().quietWhileTyping) return;
       // Only the developer's own typing: the focused window's active editor (Claude's edits usually land elsewhere).
       const active = vscode.window.activeTextEditor;
       if (!vscode.window.state.focused || !active || active.document !== e.document) return;
@@ -454,7 +508,7 @@ function fmt(n) {
 
 /** @param {vscode.StatusBarItem} item */
 function renderStatus(item, s) {
-  if (!cfg().get('showStatusBar', true)) {
+  if (!settings().showStatusBar) {
     item.hide();
     return;
   }
