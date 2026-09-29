@@ -4,3 +4,4 @@
 test/**
 **/*.vsix
 **/.DS_Store
+CONTRIBUTING.md

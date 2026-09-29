@@ -2,7 +2,7 @@
   "name": "claude-octopus",
   "displayName": "Claude Octopus",
   "description": "Unofficial. A pixel pet that grows with your Claude Code context — click it to /compact.",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "publisher": "ducduong20",
   "license": "MIT",
   "engines": {

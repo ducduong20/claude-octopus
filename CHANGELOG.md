@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.1
+
+- The README is now a user guide: getting started, what the octopus is telling you, compacting, seasonal outfits, settings, privacy and an FAQ.
+
 ## 0.2.0
 
 - The view is now a tank for the octopus: water with light rays, a rippling surface, sand, swaying seaweed and rising bubbles, with a lighter tank in light themes.
