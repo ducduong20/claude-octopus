@@ -105,7 +105,7 @@
     const h = world.clientHeight;
     // Leave room for the fully grown critter plus its speech bubble.
     const fit = Math.min((w * 0.8) / MAX_SCALE, ((h - 50) / MAX_SCALE) * (18 / 14));
-    baseW = clamp(Math.min(fit, 150 * prefs.size), 28, 260);
+    baseW = clamp(Math.min(fit, 150 * prefs.size), 24, 260);
     critter.style.width = baseW + 'px';
     stage.style.setProperty('--h', (baseW * 14) / 18 + 'px');
     stage.style.setProperty('--u', baseW / 18 + 'px'); // one pixel-art unit
@@ -242,7 +242,27 @@
   ];
   const MAX_CHIPS = 8;
 
-  /** Flies little "knowledge" chips (files read, commands run, prompts…) into the mouth. */
+  /** Builds a knowledge chip (icon + short label) hidden inside the tank, ready to animate. */
+  function makeChip(it) {
+    const kind = KINDS[it.k] || KINDS.tool;
+    const el = document.createElement('div');
+    el.className = 'p chip';
+    el.style.setProperty('--hue', String(kind.hue));
+    el.style.setProperty('--sat', (kind.sat ?? 65) + '%');
+    const icon = document.createElement('b');
+    icon.textContent = kind.icon;
+    el.appendChild(icon);
+    if (it.t) el.appendChild(document.createTextNode(it.t));
+    el.style.visibility = 'hidden';
+    fx.appendChild(el);
+    return el;
+  }
+
+  /**
+   * Knowledge (files read, commands run, prompts…) drops into the tank, sinks like fish food and
+   * drifts into the octopus' mouth.
+   * Returns the chips shown and roughly how long the whole meal takes.
+   */
   function knowledge(items) {
     // Collapse repeats (e.g. many thinking blocks) and cap the batch.
     const list = [];
@@ -255,41 +275,56 @@
     const shown = list.slice(-MAX_CHIPS);
     if (extra > 0) shown.push({ k: 'tool', t: `+${extra} more` });
 
-    const m = rel(mouth);
     const w = world.clientWidth;
+    const body = rel(critter);
+    const SWALLOW = 520;
+    let end = 0;
     shown.forEach((it, i) => {
-      const kind = KINDS[it.k] || KINDS.tool;
-      const el = document.createElement('div');
-      el.className = 'p chip';
-      el.style.setProperty('--hue', String(kind.hue));
-      el.style.setProperty('--sat', (kind.sat ?? 65) + '%');
-      const icon = document.createElement('b');
-      icon.textContent = kind.icon;
-      el.appendChild(icon);
-      if (it.t) el.appendChild(document.createTextNode(it.t));
-      el.style.visibility = 'hidden';
-      fx.appendChild(el);
-
-      // Start fully inside the view, measured now that the chip has its text.
+      const el = makeChip(it);
       const half = el.offsetWidth / 2 + 6;
-      const fromLeft = i % 2 === 0;
-      const x0 = fromLeft ? half + rand(0, 20) : w - half - rand(0, 20);
-      const y0 = rand(12, Math.max(24, m.cy - 50));
-      const dx = m.cx - x0;
-      const dy = m.cy - y0;
-      const tilt = fromLeft ? -8 : 8;
+      // Drops in at the surface on alternating sides and sinks to beside the octopus
+      // (anywhere on that half when the tank is narrow).
+      const side = i % 2 === 0 ? -1 : 1;
+      const lo = side < 0 ? half : Math.min(w - half, body.x + body.w + 8);
+      const hi = side < 0 ? Math.max(half, body.x - 8) : w - half;
+      const x0 = hi - lo > 10 ? rand(lo, hi) : side < 0 ? rand(half, w / 2) : rand(w / 2, w - half);
+      const y0 = 6;
+      const tx = clamp(x0 + rand(-12, 12), half, w - half);
+      const ty = clamp(rand(body.y - 60, body.y - 10), 30, Math.max(40, body.y - 6));
+      const sink = rand(1100, 1500);
+      const delay = i * 280;
       el.style.left = x0 + 'px';
       el.style.top = y0 + 'px';
       el.style.visibility = '';
-      const a = el.animate([
-        { transform: `translate(-50%,-50%) scale(0.6) rotate(${tilt}deg)`, opacity: 0 },
-        { transform: `translate(-50%,-50%) translate(${dx * 0.15}px, ${dy * 0.15 - 12}px) scale(1) rotate(0deg)`, opacity: 1, offset: 0.2 },
-        { transform: `translate(-50%,-50%) translate(${dx * 0.6}px, ${dy * 0.6 - rand(10, 30)}px) scale(0.95) rotate(${-tilt}deg)`, opacity: 1, offset: 0.65 },
-        { transform: `translate(-50%,-50%) translate(${dx}px, ${dy}px) scale(0.15)`, opacity: 0.3 },
-      ], { duration: rand(1300, 1700), delay: i * 220, easing: 'ease-in-out', fill: 'backwards' });
-      a.onfinish = () => el.remove();
+      const sway = rand(8, 16) * (Math.random() < 0.5 ? -1 : 1);
+      const fall = el.animate(
+        [
+          { transform: 'translate(-50%,-50%) scale(.7)', opacity: 0 },
+          { transform: `translate(-50%,-50%) translate(${sway * 0.4}px, ${(ty - y0) * 0.3}px) scale(1)`, opacity: 1, offset: 0.25 },
+          { transform: `translate(-50%,-50%) translate(${-sway * 0.5}px, ${(ty - y0) * 0.7}px) rotate(${sway / 3}deg)`, opacity: 1, offset: 0.7 },
+          { transform: `translate(-50%,-50%) translate(${tx - x0}px, ${ty - y0}px)`, opacity: 1 },
+        ],
+        { duration: sink, delay, easing: 'ease-out', fill: 'both' }
+      );
+      end = Math.max(end, delay + sink + SWALLOW);
+      fall.finished.then(() => {
+        const m = rel(mouth);
+        const mx = m.cx - x0;
+        const my = m.cy - y0;
+        const sx = tx - x0;
+        const sy = ty - y0;
+        const eat = el.animate(
+          [
+            { transform: `translate(-50%,-50%) translate(${sx}px, ${sy}px)` },
+            { transform: `translate(-50%,-50%) translate(${(sx + mx) / 2}px, ${(sy + my) / 2 - 10}px) scale(.7)`, offset: 0.55 },
+            { transform: `translate(-50%,-50%) translate(${mx}px, ${my}px) scale(.12)`, opacity: 0.2 },
+          ],
+          { duration: SWALLOW, easing: 'ease-in', fill: 'forwards' }
+        );
+        eat.onfinish = () => el.remove();
+      });
     });
-    return shown;
+    return { shown, ms: end };
   }
 
   function sweat(both = false) {
@@ -448,6 +483,34 @@
     }
   }
 
+  /** Bubbles rising to the surface, from the octopus or a clump of seaweed. */
+  function bubbleUp(fromOctopus) {
+    let x;
+    let y;
+    if (fromOctopus) {
+      const m = rel(mouth);
+      x = m.cx + rand(-4, 4);
+      y = m.y;
+    } else {
+      const weeds = document.querySelectorAll('.weed');
+      const wd = rel(weeds[Math.floor(Math.random() * weeds.length)]);
+      x = wd.cx;
+      y = wd.y + wd.h * 0.3;
+    }
+    const n = fromOctopus ? 2 : 1 + Math.floor(Math.random() * 2);
+    for (let i = 0; i < n; i++) {
+      const drift = rand(-12, 12);
+      const el = spawn('bubble-up', '', x, y, [
+        { transform: 'translate(0,0) scale(.5)', opacity: 0 },
+        { transform: `translate(${drift * 0.4}px, ${-y * 0.3}px) scale(1)`, opacity: 0.9, offset: 0.2 },
+        { transform: `translate(${-drift * 0.3}px, ${-y * 0.7}px) scale(1.1)`, opacity: 0.8, offset: 0.65 },
+        { transform: `translate(${drift}px, ${-y + 4}px) scale(1.2)`, opacity: 0 },
+      ], { duration: rand(2600, 4200), delay: i * 350, easing: 'ease-in', fill: 'backwards' });
+      const sz = rand(3, 7);
+      el.style.width = el.style.height = sz + 'px';
+    }
+  }
+
   function steam() {
     const c = rel(critter);
     for (const s of [-1, 1]) {
@@ -490,8 +553,8 @@
   async function feed(items = []) {
     lastFeedAt = Date.now();
     if (quiet()) return; // still grows via applyState, just without the flying chips
-    const shown = knowledge(items);
-    await sleep(900 + Math.min(shown.length, 4) * 150);
+    const { shown, ms } = knowledge(items);
+    await sleep(ms);
     await play('eat', 880);
     const named = shown.filter((it) => it.t && it.k !== 'think' && !it.t.startsWith('+'));
     if (named.length && Math.random() < 0.4) say(`mm, ${pick(named).t}`, 1600);
@@ -502,8 +565,8 @@
   async function eat(delta) {
     if (Date.now() - lastFeedAt < 5000 || quiet()) return;
     const n = clamp(Math.round(delta * 60), 2, 5);
-    knowledge(Array.from({ length: n }, () => pick(GENERIC)));
-    await sleep(1000);
+    const { ms } = knowledge(Array.from({ length: n }, () => pick(GENERIC)));
+    await sleep(ms);
     await play('eat', 880);
     if (Math.random() < 0.35) say(pick(LINES.fed), 1400);
   }
@@ -1120,6 +1183,7 @@
     if (prefs.theme === 'christmas') fall('snow');
     if (prefs.theme === 'tet' && tickN % 2 === 0) fall('blossom', '✿');
     if (mood === 'vibe' && tickN % 4 === 0) notes(1);
+    if (tickN % (lively() ? 3 : 5) === 0) bubbleUp(mood !== 'sleep' && mood !== 'hibernate' && Math.random() < 0.3);
     if (mood === 'sleep' && tickN % 2 === 0) zzz();
     if (mood === 'hibernate' && tickN % 3 === 0) zzz();
     if (mood === 'stressed' && tickN % 3 === 0) sweat();
@@ -1255,7 +1319,10 @@
     const old = pct;
     pct = s.pct;
 
-    $('pct').textContent = s.compacted ? 'compacted' : `${(pct * 100).toFixed(pct < 0.1 ? 1 : 0)}%`;
+    const shown = prefs.percent === 'left' ? 1 - pct : pct;
+    $('pct').textContent = s.compacted
+      ? 'compacted'
+      : `${(shown * 100).toFixed(shown < 0.1 ? 1 : 0)}%${prefs.percent === 'left' ? ' left' : ''}`;
     $('tokens').textContent = `${fmt(s.used)} / ${fmt(s.window)}`;
     $('session').textContent =
       String(s.project || '').replace(/^-/, '').split('-').slice(-2).join('/') + ' · ' + String(s.sessionId || '').slice(0, 8);
@@ -1281,7 +1348,7 @@
       setSize(newSize); // auto-compact or /compact typed by hand
       celebrate();
     } else if (delta > 0.001) {
-      setTimeout(() => setSize(newSize), 1400); // grow once the knowledge is swallowed
+      setTimeout(() => setSize(newSize), 2600); // grow once the knowledge is swallowed
       eat(delta);
     } else {
       setSize(newSize);

@@ -107,7 +107,101 @@ body {
   flex: 1;
   overflow: hidden;
 }
+/* ---------- the tank: the octopus' home ---------- */
+:root {
+  --water-top: #123f5c;
+  --water-bottom: #0a2337;
+  --sand: #b8935a;
+  --sand-dark: #8f6f3d;
+  --weed: #2f9160;
+  --weed-dark: #1d6a43;
+}
+body.vscode-light {
+  --water-top: #d6f1fb;
+  --water-bottom: #9fd5ea;
+  --sand: #e4c690;
+  --sand-dark: #c29f63;
+  --weed: #3aa56a;
+  --weed-dark: #28834f;
+}
+#world {
+  background: linear-gradient(to bottom, var(--water-top), var(--water-bottom));
+}
+#tank {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.water-surface {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 5px;
+  background: repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.22) 0 12px, rgba(255, 255, 255, 0.06) 12px 24px);
+  animation: waves 8s linear infinite;
+}
+.rays i {
+  position: absolute;
+  top: -10%;
+  width: 36px;
+  height: 115%;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.09), transparent 75%);
+  transform: skewX(-14deg);
+  animation: ray 7s ease-in-out infinite alternate;
+}
+.rays i:nth-child(1) { left: 14%; }
+.rays i:nth-child(2) { left: 48%; width: 24px; animation-delay: -3s; }
+.rays i:nth-child(3) { left: 76%; width: 30px; animation-delay: -5s; }
+.sand {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 16px;
+  background:
+    radial-gradient(circle at 8% 65%, #8a8f99 0 2.5px, transparent 3px),
+    radial-gradient(circle at 27% 45%, var(--sand-dark) 0 2px, transparent 2.5px),
+    radial-gradient(circle at 53% 70%, #9aa0a8 0 3px, transparent 3.5px),
+    radial-gradient(circle at 71% 40%, var(--sand-dark) 0 2px, transparent 2.5px),
+    radial-gradient(circle at 90% 62%, #7f8590 0 2.5px, transparent 3px),
+    var(--sand);
+  box-shadow: inset 0 3px 0 var(--sand-dark);
+}
+.weed {
+  position: absolute;
+  bottom: 10px;
+  width: 12px;
+  transform-origin: 50% 100%;
+  animation: weed 4.6s ease-in-out infinite alternate;
+}
+.weed .wd { fill: var(--weed); }
+.weed .wk { fill: var(--weed-dark); }
+.weed.w1 { left: 6%; height: 56px; }
+.weed.w2 { left: 15%; height: 36px; animation-delay: -2s; }
+.weed.w3 { right: 7%; height: 64px; animation-delay: -1s; }
+.p.bubble-up {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  border: 1px solid rgba(210, 240, 255, 0.7);
+  background: rgba(210, 240, 255, 0.15);
+}
+@keyframes waves {
+  to { background-position: 48px 0; }
+}
+@keyframes ray {
+  from { opacity: 0.35; }
+  to { opacity: 1; }
+}
+@keyframes weed {
+  from { transform: rotate(-5deg); }
+  to { transform: rotate(5deg); }
+}
+
 #ground {
+  display: none; /* the sand is the floor now */
   position: absolute;
   left: 12px;
   right: 12px;
@@ -919,6 +1013,9 @@ body.vscode-light .p.snow { background: #b9d7f2; }
 .motion-minimal #bobber, .hush #bobber { animation: breathe 4s ease-in-out infinite !important; }
 .motion-minimal #fx, .hush #fx { opacity: 0.6; }
 
+.motion-minimal .weed, .hush .weed,
+.motion-minimal .rays i, .hush .rays i,
+.motion-minimal .water-surface, .hush .water-surface,
 .motion-minimal .star, .hush .star,
 .motion-minimal .snot, .hush .snot,
 .motion-minimal #pom, .hush #pom { animation: none !important; }

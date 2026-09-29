@@ -1,6 +1,6 @@
 # Claude Octopus
 
-*Unofficial.* A context meter for Claude Code: a pixel mascot that lives in the VS Code Activity Bar and **grows as the context of your running Claude Code session fills up**.
+*Unofficial.* A context meter for Claude Code: a pixel octopus that lives in its own little tank in the VS Code sidebar or panel and **grows as the context of your running Claude Code session fills up**.
 When the context is full, **click it to run `/compact`**.
 
 ## How it works
@@ -27,7 +27,8 @@ When the context is full, **click it to run `/compact`**.
   it nods to lo-fi beats, taps along, sips "slurp ☕" or raises a glass "1, 2, 3… cheers! 🍺", music notes float up; "vibing ~ 🎧", "auto-accept mode 😎"
 - **bored** (nothing has happened for ≥ 90 seconds, before it falls asleep): droopy eyes, flat mouth, "*sigh*";
   it lies flat and melts, blows bubblegum until it pops, plays a handheld game, rolls its eyes, taps impatiently; "type something 🥱"
-- **eating**: whatever Claude just loaded into the context flies into its mouth as little "knowledge" chips, then it munches and grows:
+- **the tank**: the view is the octopus' home: water with light rays, a rippling surface, sand and pebbles, swaying seaweed and rising bubbles (a lighter tank in light themes).
+- **eating**: whatever Claude just loaded into the context drops into the tank as little "knowledge" chips, sinks like fish food and drifts into the octopus' mouth; it munches and grows:
   📄 file read · ✏️ file edited · ›_ Bash command · 🔍 grep/glob · 🌐 web · 🤖 subagent · 💬 your prompt · 💡 thinking · 🖼️ image · 🔧 other tool.
   Only newly written transcript lines are used (history is never replayed).
 - **stressed** (≥ threshold): turns red, sweats, trembles, lets off steam
@@ -44,11 +45,15 @@ When the context is full, **click it to run `/compact`**.
   Poking it only makes it talk in its sleep ("5 more minutes…"); it wakes with a start only when a new message is sent to Claude.
   While the cache is still warm, the HUD counts down `⚡ 42m`.
 
-## Try it
-- Development: open this folder in VS Code and press **F5**.
-- Install for real (no build or npm needed): symlink it into the extensions folder, then Reload Window:
-  `ln -s "$PWD" ~/.vscode/extensions/local.claude-octopus-0.1.0`
+## Install
+- From the Marketplace: search for **Claude Octopus** in the Extensions view.
+- From a package: `code --install-extension claude-octopus-0.2.0.vsix`, then run **Developer: Reload Window**.
+- The tank opens from its Activity Bar icon; set `claudeOctopus.location` to `explorer` or `panel` to move it.
+
+## Development
+- Open this folder in VS Code and press **F5** to start an Extension Development Host.
 - Preview the animations without VS Code: `python3 -m http.server 8765`, then open `http://localhost:8765/test/harness.html`.
+- Build a package: `npx @vscode/vsce package` (no other build step or dependencies).
 
 ## Seasonal themes (`claudeOctopus.theme`, default `auto`)
 | Theme | When (auto) | Outfit & actions |
@@ -71,6 +76,7 @@ Set `theme` to `none` to turn themes off, or pick one directly. Add your own dat
 | `claudeOctopus.location` | `activitybar` | `activitybar` · `explorer` (a small section in the Explorer) · `panel` (a tab next to the Terminal) · `hidden` (status bar only) |
 | `claudeOctopus.showSpeech` | `true` | Turn off speech bubbles (the context-full alert is always shown) |
 | `claudeOctopus.showStatusBar` | `true` | Show or hide `42%` in the status bar |
+| `claudeOctopus.percentDisplay` | `used` | `used` or `left`. Claude Code's own "context left" counts down to auto-compact, so it reads a few points lower |
 
 The **Claude Octopus: Cycle Motion Level** command switches quickly between `lively → calm → minimal`.
 When the operating system has *Reduce motion* turned on, all looping animations are disabled.

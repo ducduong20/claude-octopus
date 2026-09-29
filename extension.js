@@ -52,6 +52,7 @@ function settings() {
     showSpeech: bool(c, 'showSpeech', true),
     showStatusBar: bool(c, 'showStatusBar', true),
     knowledgeLabels: bool(c, 'knowledgeLabels', true),
+    percentDisplay: oneOf(c, 'percentDisplay', 'used', ['used', 'left']),
     theme: oneOf(c, 'theme', 'auto', ['auto', 'none', 'messi', 'women', 'christmas', 'tet']),
     themeDates: Array.isArray(themeDates) ? themeDates.slice(0, 50) : [],
   };
@@ -69,6 +70,7 @@ function prefs(st = settings()) {
     motion: st.motion,
     size: st.size,
     speech: st.showSpeech,
+    percent: st.percentDisplay,
     theme: activeTheme(new Date(), st.theme, st.themeDates),
   };
 }
@@ -225,6 +227,29 @@ const BODY = `<div id="stage" class="mood-sleep">
     <div id="banner"></div>
   </div>
   <div id="world">
+    <div id="tank" aria-hidden="true">
+      <div class="rays"><i></i><i></i><i></i></div>
+      <div class="water-surface"></div>
+    <svg class="weed w1" viewBox="0 0 5 20" shape-rendering="crispEdges">
+      <rect class="wd" x="2" y="0" width="1" height="3"/><rect class="wd" x="1" y="3" width="1" height="3"/><rect class="wd" x="2" y="6" width="1" height="3"/>
+      <rect class="wd" x="3" y="9" width="1" height="3"/><rect class="wd" x="2" y="12" width="1" height="3"/><rect class="wd" x="1" y="15" width="1" height="3"/>
+      <rect class="wd" x="2" y="18" width="1" height="2"/>
+      <rect class="wk" x="0" y="4" width="1" height="1"/><rect class="wk" x="3" y="7" width="1" height="1"/><rect class="wk" x="4" y="10" width="1" height="1"/><rect class="wk" x="0" y="14" width="1" height="1"/>
+    </svg>
+    <svg class="weed w2" viewBox="0 0 5 20" shape-rendering="crispEdges">
+      <rect class="wd" x="2" y="0" width="1" height="3"/><rect class="wd" x="1" y="3" width="1" height="3"/><rect class="wd" x="2" y="6" width="1" height="3"/>
+      <rect class="wd" x="3" y="9" width="1" height="3"/><rect class="wd" x="2" y="12" width="1" height="3"/><rect class="wd" x="1" y="15" width="1" height="3"/>
+      <rect class="wd" x="2" y="18" width="1" height="2"/>
+      <rect class="wk" x="0" y="4" width="1" height="1"/><rect class="wk" x="3" y="7" width="1" height="1"/><rect class="wk" x="4" y="10" width="1" height="1"/><rect class="wk" x="0" y="14" width="1" height="1"/>
+    </svg>
+    <svg class="weed w3" viewBox="0 0 5 20" shape-rendering="crispEdges">
+      <rect class="wd" x="2" y="0" width="1" height="3"/><rect class="wd" x="1" y="3" width="1" height="3"/><rect class="wd" x="2" y="6" width="1" height="3"/>
+      <rect class="wd" x="3" y="9" width="1" height="3"/><rect class="wd" x="2" y="12" width="1" height="3"/><rect class="wd" x="1" y="15" width="1" height="3"/>
+      <rect class="wd" x="2" y="18" width="1" height="2"/>
+      <rect class="wk" x="0" y="4" width="1" height="1"/><rect class="wk" x="3" y="7" width="1" height="1"/><rect class="wk" x="4" y="10" width="1" height="1"/><rect class="wk" x="0" y="14" width="1" height="1"/>
+    </svg>
+      <div class="sand"></div>
+    </div>
     <div id="sky">
       <span class="moon">☾</span>
       <span class="star" style="left:12%;top:14%">✦</span>
@@ -457,6 +482,8 @@ function activate(context) {
   });
   renderStatus(status, monitor.state);
 
+
+
   context.subscriptions.push(
     status,
     monitor,
@@ -520,8 +547,9 @@ function renderStatus(item, s) {
     return;
   }
   const pct = Math.round(s.pct * 100);
-  item.text = `$(hubot) ${pct}%`;
-  item.tooltip = `Claude context: ${fmt(s.used)} / ${fmt(s.window)} tokens\n${
+  const left = settings().percentDisplay === 'left';
+  item.text = left ? `$(hubot) ${100 - pct}% left` : `$(hubot) ${pct}%`;
+  item.tooltip = `Claude context: ${pct}% used, ${fmt(s.used)} of ${fmt(s.window)} tokens (${100 - pct}% of the window left)\n${
     s.pct >= s.threshold ? 'Click to run /compact' : 'Click to show the octopus'
   }`;
   item.backgroundColor =

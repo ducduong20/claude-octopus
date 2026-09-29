@@ -2,7 +2,7 @@
   "name": "claude-octopus",
   "displayName": "Claude Octopus",
   "description": "Unofficial. A pixel pet that grows with your Claude Code context — click it to /compact.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "publisher": "ducduong20",
   "license": "MIT",
   "engines": {
@@ -266,6 +266,20 @@
           "default": true,
           "order": 11,
           "description": "Show short labels (file names, command descriptions, the start of your prompt) on the knowledge chips the octopus eats. Anything that looks like a secret is always masked; turn this off to show icons only, e.g. while screen sharing."
+        },
+        "claudeOctopus.percentDisplay": {
+          "type": "string",
+          "enum": [
+            "used",
+            "left"
+          ],
+          "default": "used",
+          "order": 4,
+          "enumDescriptions": [
+            "Percentage of the context window already used.",
+            "Percentage of the context window still free."
+          ],
+          "description": "How the context percentage is shown. Note: Claude Code's own 'context left' figure counts down to auto-compact, which happens a little before the window is full, so it reads a few points lower."
         }
       }
     }
