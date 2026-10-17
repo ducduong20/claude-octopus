@@ -2,7 +2,7 @@
   "name": "claude-octopus",
   "displayName": "Claude Octopus",
   "description": "Unofficial. A pixel Claude that shows your Claude Code usage quota and context, and eats what Claude reads.",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "publisher": "ducduong20",
   "license": "MIT",
   "engines": {

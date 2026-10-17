@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.1
+
+- The floating mascot can be dragged right up to either edge of the window: the drag is limited by the mascot itself, not by its whole walking strip, and it only walks on the part of the strip inside the window.
+
 ## 0.3.0
 
 - **A new mascot**: a tiny pixel Claude that floats on top of the Claude Code chat box (macOS), with a transparent background, drawn natively so it costs almost no memory or CPU. Drag it once and it remembers the spot.

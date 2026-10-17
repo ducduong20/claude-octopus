@@ -114,8 +114,13 @@ final class OctopusView: NSView {
     var queue: [(anim: String, icon: String?)] = []
     var icon: String?
 
-    var minX: CGFloat { -3 } // frames have 3 empty columns on each side
-    var maxX: CGFloat { Self.stripW - Self.cell + 3 }
+    /// The part of the strip it may walk on (frame left edge, in units): the whole strip, cut down
+    /// to what lies inside the VS Code window (the strip may stick out after a drag). Frames have 3
+    /// empty columns on each side.
+    var visibleMin: CGFloat = -.infinity
+    var visibleMax: CGFloat = .infinity
+    var minX: CGFloat { max(-3, visibleMin) }
+    var maxX: CGFloat { max(minX, min(Self.stripW - Self.cell + 3, visibleMax)) }
 
     var current: Anim { Sprites.anims[anim] ?? Sprites.anims["idle"]! }
     var frameIndex: Int {
@@ -223,6 +228,11 @@ final class OctopusView: NSView {
             pick -= dt
             if pick <= 0 { choosePastime() }
             play(pastime)
+        }
+        // Never stand outside the walkable part (the window may have shrunk under it).
+        if !inPlace, x < minX || x > maxX {
+            x = min(max(x, minX), maxX)
+            targetX = min(max(targetX, minX), maxX)
         }
         if (anim == "walk" || anim == "tired_walk") && !inPlace {
             let speed: CGFloat = anim == "walk" ? 6 : 3 // art pixels per second
@@ -471,9 +481,16 @@ final class Overlay: NSObject {
     func place() {
         guard let f = current?.frame else { return }
         let s = panel.frame.size
-        margin.x = max(0, min(f.width - s.width, margin.x))
+        let u = view.unit
+        // The mascot itself (columns 3...18 of its frame) must stay inside the window; the rest of
+        // the strip may stick out, so it can be dragged right up to either edge.
+        let spriteLeft = (view.x + 3) * u, spriteRight = (view.x + 19) * u
+        margin.x = max(spriteRight - s.width, min(f.width - s.width + spriteLeft, margin.x))
         margin.y = max(0, min(f.height - s.height - 30, margin.y))
-        panel.setFrameOrigin(NSPoint(x: f.maxX - s.width - margin.x, y: f.minY + margin.y))
+        let origin = NSPoint(x: f.maxX - s.width - margin.x, y: f.minY + margin.y)
+        panel.setFrameOrigin(origin)
+        view.visibleMin = (f.minX - origin.x) / u - 3
+        view.visibleMax = (f.maxX - origin.x) / u - 19
     }
 
     var lastScan = Date.distantPast
