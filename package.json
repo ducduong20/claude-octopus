@@ -1,7 +1,7 @@
 {
   "name": "claude-octopus",
   "displayName": "Claude Octopus",
-  "description": "Unofficial. A pixel Claude that shows your Claude Code usage quota and context, and eats what Claude reads.",
+  "description": "Unofficial. A tiny pixel Claude on the Claude Code chat box that shows your usage quota and eats a $ every time Claude answers.",
   "version": "0.3.1",
   "publisher": "ducduong20",
   "license": "MIT",
