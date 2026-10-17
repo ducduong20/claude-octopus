@@ -8,6 +8,7 @@
 - **It eats your quota**: a green `$` drops into its mouth every time Claude answers, and an icon for every file read, command run, search or prompt.
 - **Gym reminder**: it lifts weights every day at 16:45 (`claudeOctopus.gymReminder`).
 - **Preview Mascot State** shows any animation on demand, or plays them all for a demo.
+- Clicking the mascot or the status bar shows your usage, and offers `/compact` once the context is past the threshold; a double-click compacts.
 - **Choose Session** picks which Claude Code session to follow; by default it follows the one that most recently talked to Claude.
 - The context now matches Claude Code's `/context`: the window size (200k or 1M) is learned per model from your history.
 - New settings: `eyes` (white or black) and `gymReminder`; `location` gains `floating`, now the default.

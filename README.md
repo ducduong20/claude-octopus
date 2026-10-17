@@ -35,7 +35,7 @@ The status bar shows your quota too. Run **Claude Octopus: Preview Mascot State*
 | `claudeOctopus.gymReminder` | `16:45` | Daily gym reminder; empty turns it off |
 | `claudeOctopus.size` | `1` | Size of the mascot (0.3 to 2) |
 
-Click the mascot to run `/compact` once the conversation is past 75% full. Hold `Option` to click through it.
+Click the mascot (or the status bar) for your usage details, with a **Run /compact** button once the conversation is past 75% full; double-click to compact at any time. Hold `Option` to click through it.
 
 ## Privacy
 

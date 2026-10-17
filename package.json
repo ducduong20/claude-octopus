@@ -38,7 +38,7 @@
         {
           "type": "webview",
           "id": "claudeOctopus.view",
-          "name": "Context",
+          "name": "Claude Octopus",
           "when": "config.claudeOctopus.location == 'activitybar' || (config.claudeOctopus.location == 'floating' && !isMac)"
         }
       ],
@@ -46,7 +46,7 @@
         {
           "type": "webview",
           "id": "claudeOctopus.explorerView",
-          "name": "Claude Context",
+          "name": "Claude Octopus",
           "when": "config.claudeOctopus.location == 'explorer'"
         }
       ],
@@ -54,7 +54,7 @@
         {
           "type": "webview",
           "id": "claudeOctopus.panelView",
-          "name": "Context",
+          "name": "Claude Octopus",
           "when": "config.claudeOctopus.location == 'panel'"
         }
       ]
@@ -93,14 +93,14 @@
           "default": 0,
           "minimum": 0,
           "order": 20,
-          "description": "Context window size in tokens. 0 (default) learns it per model from your Claude Code history: models that have held more than 200k tokens get a 1M window. Set a number to force it."
+          "description": "Context window size in tokens, used for the context line of the tooltip and for /compact. 0 (default) learns it per model from your Claude Code history (more than 200k means a 1M window). Set a number to force it."
         },
         "claudeOctopus.compactThreshold": {
           "type": "number",
           "default": 0.75,
           "minimum": 0.1,
           "maximum": 1,
-          "description": "Fraction of the context window at which the octopus counts as 'full' and a single click runs /compact."
+          "description": "How full the conversation's context must be before the details offer /compact (and before a click on the tank octopus compacts)."
         },
         "claudeOctopus.sessionSource": {
           "type": "string",
@@ -124,12 +124,12 @@
         "claudeOctopus.confirmBelowThreshold": {
           "type": "boolean",
           "default": true,
-          "description": "Ask before running /compact when the context is still below the threshold (double-click)."
+          "description": "Ask before running /compact on a double-click while the context is still below the threshold."
         },
         "claudeOctopus.sleepAfterMinutes": {
           "type": "number",
           "default": 5,
-          "description": "The octopus falls asleep after this many minutes without session activity."
+          "description": "Tank view only (Activity Bar, Explorer or panel): the octopus falls asleep after this many minutes without session activity. The floating mascot only sleeps when a usage limit is hit."
         },
         "claudeOctopus.motion": {
           "type": "string",
@@ -145,7 +145,7 @@
             "No flashing or view shaking; slower pulses and fewer idle antics. Easy on the eyes while coding.",
             "Almost still: only size, colour and gentle breathing. No particles or wandering."
           ],
-          "description": "How much the octopus moves."
+          "markdownDescription": "How much it moves. `minimal` also stops the floating mascot eating while Claude works."
         },
         "claudeOctopus.size": {
           "type": "number",
@@ -153,7 +153,7 @@
           "minimum": 0.3,
           "maximum": 2,
           "order": 1,
-          "description": "Size multiplier for the octopus (it still grows with the context inside this size, and never outgrows the view)."
+          "description": "Size multiplier for the mascot."
         },
         "claudeOctopus.location": {
           "type": "string",
@@ -200,19 +200,19 @@
           "type": "boolean",
           "default": true,
           "order": 3,
-          "description": "Hold still (no particles, speech or wandering) for a few seconds after every edit you make."
+          "description": "Tank view only (Activity Bar, Explorer or panel): hold still (no particles, speech or wandering) for a few seconds after every edit you make."
         },
         "claudeOctopus.showSpeech": {
           "type": "boolean",
           "default": true,
           "order": 4,
-          "description": "Show speech bubbles. Important alerts (context full) are always shown."
+          "description": "Tank view only (Activity Bar, Explorer or panel): show speech bubbles. Important alerts are always shown."
         },
         "claudeOctopus.showStatusBar": {
           "type": "boolean",
           "default": true,
           "order": 5,
-          "description": "Show the context percentage in the status bar."
+          "description": "Show the usage quota in the status bar (the context when Claude Code has not cached the quota yet)."
         },
         "claudeOctopus.cacheTtl": {
           "type": "string",
@@ -228,7 +228,7 @@
             "5-minute prompt cache.",
             "1-hour prompt cache."
           ],
-          "description": "How long Claude's prompt cache lives. Once it expires the octopus goes into deep sleep: the next message has to re-read the whole context."
+          "description": "Tank view only (Activity Bar, Explorer or panel): how long Claude's prompt cache lives. Once it expires the octopus goes into deep sleep: the next message has to re-read the whole context."
         },
         "claudeOctopus.theme": {
           "type": "string",
@@ -250,13 +250,13 @@
             "Santa hat, snow and presents.",
             "Lanterns, red envelopes and apricot blossoms for Lunar New Year (Tet)."
           ],
-          "description": "Seasonal outfit for the octopus."
+          "description": "Tank view only (Activity Bar, Explorer or panel): seasonal outfit for the octopus."
         },
         "claudeOctopus.themeDates": {
           "type": "array",
           "default": [],
           "order": 8,
-          "markdownDescription": "Extra dates for themes (they win over built-in ones). Dates are `YYYY-MM-DD` or yearly `MM-DD`, e.g. `[{ \"theme\": \"messi\", \"from\": \"2026-10-03\", \"to\": \"2026-10-07\" }]`.",
+          "markdownDescription": "Tank view only (Activity Bar, Explorer or panel): Extra dates for themes (they win over built-in ones). Dates are `YYYY-MM-DD` or yearly `MM-DD`, e.g. `[{ \"theme\": \"messi\", \"from\": \"2026-10-03\", \"to\": \"2026-10-07\" }]`.",
           "items": {
             "type": "object",
             "properties": {
@@ -292,13 +292,13 @@
           "type": "number",
           "default": 90,
           "order": 10,
-          "description": "After this long without any session activity the octopus gets bored (before it eventually falls asleep)."
+          "description": "Tank view only (Activity Bar, Explorer or panel): after this long without any session activity the octopus gets bored."
         },
         "claudeOctopus.knowledgeLabels": {
           "type": "boolean",
           "default": true,
           "order": 11,
-          "description": "Show short labels (file names, command descriptions, the start of your prompt) on the knowledge chips the octopus eats. Anything that looks like a secret is always masked; turn this off to show icons only, e.g. while screen sharing."
+          "description": "Tank view only (Activity Bar, Explorer or panel): show short labels (file names, command descriptions, the start of your prompt) on the knowledge chips the octopus eats. Anything that looks like a secret is always masked; turn this off to show icons only, e.g. while screen sharing."
         },
         "claudeOctopus.percentDisplay": {
           "type": "string",
@@ -309,10 +309,10 @@
           "default": "used",
           "order": 4,
           "enumDescriptions": [
-            "Percentage of the context window already used.",
-            "Percentage of the context window still free."
+            "Share of the quota (or context) already used.",
+            "Share still left."
           ],
-          "description": "How the context percentage is shown: used or left, as a share of the whole context window, like Claude Code's /context."
+          "description": "How the status bar percentage is shown: used or left."
         }
       }
     }
@@ -329,7 +329,9 @@
     "compact",
     "tokens",
     "mascot",
-    "quota"
+    "quota",
+    "usage",
+    "limit"
   ],
   "capabilities": {
     "untrustedWorkspaces": {

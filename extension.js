@@ -597,6 +597,24 @@ async function pickTerminal(forceAsk = false) {
   return pick && pick.t;
 }
 
+/**
+ * Quota and context at a glance, offering /compact once the context is past the threshold.
+ * @param {ContextMonitor} monitor @param {OctopusViewProvider} provider
+ */
+async function showDetails(monitor, provider) {
+  const s = monitor.state;
+  const lines = quotaLines(monitor.quota, s);
+  const full = s.found && s.pct >= s.threshold;
+  // Notifications show a single line, so the parts are joined.
+  const pick = await vscode.window.showInformationMessage(
+    lines.join('  ·  '),
+    ...(full ? ['Run /compact'] : []),
+    'Preview animations'
+  );
+  if (pick === 'Run /compact') runCompact(monitor, provider, false);
+  else if (pick === 'Preview animations') vscode.commands.executeCommand('claudeOctopus.previewMood');
+}
+
 /** @param {ContextMonitor} monitor @param {OctopusViewProvider} provider */
 async function runCompact(monitor, provider, force) {
   const s = monitor.state;
@@ -680,7 +698,8 @@ function activate(context) {
   const moodClock = { workingSince: 0 };
   const floating = new FloatingOctopus(context.extensionPath, (m) => {
     if (m.type === 'ready') floating.lastLook = '';
-    else if (m.type === 'compact') runCompact(monitor, provider, !!m.force);
+    // A double click compacts (asking first while there is room); a single click shows the details.
+    else if (m.type === 'compact') m.force ? runCompact(monitor, provider, true) : showDetails(monitor, provider);
   });
   provider.sinks.push((msg) => {
     // What Claude just took in drops into the floating mascot too (icons only, no labels).
@@ -812,12 +831,9 @@ function activate(context) {
     }),
     vscode.commands.registerCommand('claudeOctopus.pickTerminal', () => pickTerminal(true)),
     vscode.commands.registerCommand('claudeOctopus.statusClick', () => {
-      const s = monitor.state;
-      if (s.found && s.pct >= s.threshold) runCompact(monitor, provider, false);
-      else {
-        const id = VIEW_IDS[settings().location];
-        if (id) vscode.commands.executeCommand(id + '.focus');
-      }
+      const id = VIEW_IDS[settings().location];
+      if (id) vscode.commands.executeCommand(id + '.focus');
+      else showDetails(monitor, provider);
     }),
     vscode.commands.registerCommand('claudeOctopus.cycleMotion', async () => {
       const order = ['lively', 'calm', 'minimal'];
@@ -861,7 +877,7 @@ const GYM_MINUTES = 15;
 
 /** Every animation of the floating mascot, for "Preview Mascot State" (e.g. to record a demo). */
 const DEMO_ANIMS = [
-  ['idle', 'Idle'], ['walk', 'Walk'], ['eating', 'Eating tokens and context'], ['football', 'Football'],
+  ['idle', 'Idle'], ['walk', 'Walk'], ['eating', 'Eating ($ for your quota, icons for what Claude reads)'], ['football', 'Football'],
   ['music', 'Music'], ['chill', 'Chill'], ['lift', 'Lifting weights (gym reminder)'], ['working', 'Coding'],
   ['coffee', 'Coding with coffee'], ['vibe', 'Vibe coding'], ['tired', 'Tired (quota ≥ 80 %)'],
   ['tired_walk', 'Tired walk'], ['nearly_out', 'Nearly out of quota (≥ 95 %)'], ['hibernate', 'Limit reached (sleep until reset)'],
@@ -921,7 +937,7 @@ function renderStatus(item, s) {
   const pct = Math.floor(share * 100);
   item.text = q && q.limited ? '$(hubot) limit' : left ? `$(hubot) ${100 - pct}% left` : `$(hubot) ${pct}%`;
   item.tooltip = `${quotaLines(q || combineQuota({ session: null, weekly: null, fetchedAt: null }, null), s).join('\n')}\n${
-    s.pct >= s.threshold ? 'Click to run /compact' : 'Click to show the octopus'
+    s.pct >= s.threshold ? 'Click for details and /compact' : 'Click for details'
   }`;
   const warn = q && q.pct !== null ? q.pct >= 0.8 : s.pct >= s.threshold;
   const error = q && q.pct !== null ? q.limited || q.pct >= 0.95 : s.pct >= s.full;
