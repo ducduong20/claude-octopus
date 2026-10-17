@@ -95,6 +95,8 @@ final class OctopusView: NSView {
     var x: CGFloat = 39 // left edge of the 22-wide frame, in units
     var dir: CGFloat = 1 // walking direction; walking frames are mirrored when it goes left
     var targetX: CGFloat = 39
+    /// Walk on the spot (for the demo GIF, where every animation has its own cell).
+    var inPlace = false
     var anim = "idle"
     var animTime: Double = 0 // seconds into the current animation
     var t: Double = 0 // simulation clock
@@ -222,7 +224,7 @@ final class OctopusView: NSView {
             if pick <= 0 { choosePastime() }
             play(pastime)
         }
-        if anim == "walk" || anim == "tired_walk" {
+        if (anim == "walk" || anim == "tired_walk") && !inPlace {
             let speed: CGFloat = anim == "walk" ? 6 : 3 // art pixels per second
             let d = targetX - x
             if abs(d) < 1 {
@@ -597,6 +599,64 @@ final class Overlay: NSObject {
 }
 
 // MARK: - main
+
+// Development aid: `--demo-gif <file>` renders every animation playing at once in a labelled 4 × 4
+// grid, as a looping GIF for the README.
+if let i = CommandLine.arguments.firstIndex(of: "--demo-gif"), i + 1 < CommandLine.arguments.count {
+    let out = URL(fileURLWithPath: CommandLine.arguments[i + 1])
+    let names: [(String, String)] = [
+        ("idle", "idle"), ("walk", "walk"), ("eating", "eating"), ("football", "football"),
+        ("music", "music"), ("chill", "chill"), ("lift", "gym time"), ("working", "coding"),
+        ("coffee", "coding + coffee"), ("vibe", "vibe coding"), ("tired", "tired (80%)"), ("tired_walk", "tired walk"),
+        ("nearly_out", "nearly out (95%)"), ("hibernate", "limit hit"), ("sleep", "sleep"), ("stretch", "limit reset"),
+    ]
+    let unit: CGFloat = 5, cols = 4, fps = 12.0, seconds = 6.0
+    let cellW = OctopusView.cell * unit, cellH = OctopusView.stripH * unit, labelH: CGFloat = 26, pad: CGFloat = 14
+    let rows = (names.count + cols - 1) / cols
+    let size = NSSize(width: CGFloat(cols) * (cellW + pad) + pad, height: CGFloat(rows) * (cellH + labelH + pad) + pad)
+    let views: [OctopusView] = names.map { name, _ in
+        let v = OctopusView()
+        v.unit = unit
+        v.frame = NSRect(x: 0, y: 0, width: cellW, height: cellH)
+        v.x = 0
+        v.look.demo = name
+        v.anim = name
+        v.icon = "$"
+        v.inPlace = true
+        return v
+    }
+    let frames = Int(fps * seconds)
+    guard let dest = CGImageDestinationCreateWithURL(out as CFURL, "com.compuserve.gif" as CFString, frames, nil) else { exit(1) }
+    CGImageDestinationSetProperties(dest, [kCGImagePropertyGIFDictionary: [kCGImagePropertyGIFLoopCount: 0]] as CFDictionary)
+    let delay = [kCGImagePropertyGIFDictionary: [kCGImagePropertyGIFDelayTime: 1 / fps, kCGImagePropertyGIFUnclampedDelayTime: 1 / fps]] as CFDictionary
+    let attrs: [NSAttributedString.Key: Any] = [.font: NSFont.systemFont(ofSize: 13, weight: .medium), .foregroundColor: rgb(200, 204, 210)]
+    for _ in 0..<frames {
+        guard let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: Int(size.width), pixelsHigh: Int(size.height),
+                                         bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false,
+                                         colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0),
+              let ctx = NSGraphicsContext(bitmapImageRep: rep) else { exit(1) }
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.current = ctx
+        rgb(30, 31, 34).set()
+        NSRect(origin: .zero, size: size).fill()
+        for (k, v) in views.enumerated() {
+            _ = v.step(1 / fps)
+            let col = k % cols, row = k / cols
+            let x = pad + CGFloat(col) * (cellW + pad)
+            let y = size.height - pad - CGFloat(row + 1) * (cellH + labelH + pad) + pad + labelH
+            if let cell = v.bitmapImageRepForCachingDisplay(in: v.bounds) {
+                v.cacheDisplay(in: v.bounds, to: cell)
+                cell.draw(in: NSRect(x: x, y: y, width: cellW, height: cellH), from: .zero, operation: .sourceOver,
+                          fraction: 1, respectFlipped: true, hints: nil)
+            }
+            let text = NSAttributedString(string: names[k].1, attributes: attrs)
+            text.draw(at: NSPoint(x: x + (cellW - text.size().width) / 2, y: y - labelH + 4))
+        }
+        NSGraphicsContext.restoreGraphicsState()
+        if let img = rep.cgImage { CGImageDestinationAddImage(dest, img, delay) }
+    }
+    exit(CGImageDestinationFinalize(dest) ? 0 : 1)
+}
 
 // Development aid: `--snapshot <dir>` renders every animation through the real view and saves one
 // sprite sheet (a row per animation, a frame per column), with no window and no screen access.

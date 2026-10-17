@@ -12,6 +12,7 @@
 - The floating mascot is a native macOS helper. After changing `native/macos`, rebuild it with `sh native/macos/build.sh` (Xcode command line tools; it writes the universal, ad-hoc signed `bin/darwin/octopus-overlay`).
 - Sprites: `media/sprites/octopus.png` is the sheet (one row per animation, 22 × 22 frames). `python3 -I native/macos/redraw.py` applies the hand-composed and patched rows, and `python3 -I native/macos/make_sprites.py` turns the sheet into `native/macos/Sprites.swift` (`build.sh` runs the latter).
 - `bin/darwin/octopus-overlay --snapshot <dir>` renders every animation into `<dir>/_sheet.png` without a window, for a quick visual check.
+- `bin/darwin/octopus-overlay --demo-gif media/readme/demo.gif` re-renders the README demo (every animation in a grid) after the sprites change.
 
 ## How it works
 
