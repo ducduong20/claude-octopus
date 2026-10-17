@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.3.0
+
+- **A new mascot**: a tiny pixel Claude that floats on top of the Claude Code chat box (macOS), with a transparent background, drawn natively so it costs almost no memory or CPU. Drag it once and it remembers the spot.
+- **It shows your usage quota** (the 5-hour session and weekly limits) instead of only the context: tired from 80%, nearly out at 95%, asleep under a nightcap when a limit is hit, and a stretch when it resets. Hover for usage and reset times; the status bar shows the quota too.
+- **16 animations**: idle, walk, football, music, chill, lifting weights, coding, coding with coffee, vibe coding, eating, tired, tired walk, nearly out, hibernate, sleep and stretch.
+- **It eats your quota**: a green `$` drops into its mouth every time Claude answers, and an icon for every file read, command run, search or prompt.
+- **Gym reminder**: it lifts weights every day at 16:45 (`claudeOctopus.gymReminder`).
+- **Preview Mascot State** shows any animation on demand, or plays them all for a demo.
+- **Choose Session** picks which Claude Code session to follow; by default it follows the one that most recently talked to Claude.
+- The context now matches Claude Code's `/context`: the window size (200k or 1M) is learned per model from your history.
+- New settings: `eyes` (white or black) and `gymReminder`; `location` gains `floating`, now the default.
+- Security: model names from transcripts can no longer reach object prototypes, pinned sessions must be regular files, `~/.claude.json` is read with a size cap and only its usage numbers are kept, and huge transcript lines are skipped without being loaded.
+
 ## 0.2.1
 
 - The README is now a user guide: getting started, what the octopus is telling you, compacting, seasonal outfits, settings, privacy and an FAQ.

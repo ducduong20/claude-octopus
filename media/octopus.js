@@ -937,7 +937,7 @@
     if (!state || !state.found) return 'sleep';
     if (compacting) return 'compacting';
     if (cacheLeft() <= 0 && Date.now() - state.lastWrite >= 8000) return 'hibernate';
-    if (pct >= 0.99) return 'stuffed';
+    if (pct >= (state.compactPct || 0.99) - 0.005) return 'stuffed';
     if (pct >= state.full) return 'panic';
     if (pct >= state.threshold) return 'stressed';
     const now = Date.now();
@@ -1322,10 +1322,12 @@
     const shown = prefs.percent === 'left' ? 1 - pct : pct;
     $('pct').textContent = s.compacted
       ? 'compacted'
-      : `${(shown * 100).toFixed(shown < 0.1 ? 1 : 0)}%${prefs.percent === 'left' ? ' left' : ''}`;
+      : `${shown < 0.1 ? (Math.floor(shown * 1000) / 10).toFixed(1) : Math.floor(shown * 100)}%${prefs.percent === 'left' ? ' left' : ''}`;
     $('tokens').textContent = `${fmt(s.used)} / ${fmt(s.window)}`;
-    $('session').textContent =
-      String(s.project || '').replace(/^-/, '').split('-').slice(-2).join('/') + ' · ' + String(s.sessionId || '').slice(0, 8);
+    $('tokens').title = `Auto-compacts at ${fmt(s.compactAt || s.window)} tokens`;
+    $('session').textContent = s.title
+      ? String(s.title).slice(0, 60)
+      : String(s.project || '').replace(/^-/, '').split('-').slice(-2).join('/') + ' · ' + String(s.sessionId || '').slice(0, 8);
     renderCache();
     $('fill').style.width = pct * 100 + '%';
     $('mark').style.left = `calc(${s.threshold * 100}% - 1px)`;

@@ -5,3 +5,5 @@ test/**
 **/*.vsix
 **/.DS_Store
 CONTRIBUTING.md
+native/**
+media/sprites/**

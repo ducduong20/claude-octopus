@@ -1,8 +1,8 @@
 {
   "name": "claude-octopus",
   "displayName": "Claude Octopus",
-  "description": "Unofficial. A pixel pet that grows with your Claude Code context — click it to /compact.",
-  "version": "0.2.1",
+  "description": "Unofficial. A pixel Claude that shows your Claude Code usage quota and context, and eats what Claude reads.",
+  "version": "0.3.0",
   "publisher": "ducduong20",
   "license": "MIT",
   "engines": {
@@ -39,7 +39,7 @@
           "type": "webview",
           "id": "claudeOctopus.view",
           "name": "Context",
-          "when": "config.claudeOctopus.location == 'activitybar'"
+          "when": "config.claudeOctopus.location == 'activitybar' || (config.claudeOctopus.location == 'floating' && !isMac)"
         }
       ],
       "explorer": [
@@ -75,6 +75,14 @@
       {
         "command": "claudeOctopus.cycleMotion",
         "title": "Claude Octopus: Cycle Motion Level (lively / calm / minimal)"
+      },
+      {
+        "command": "claudeOctopus.chooseSession",
+        "title": "Claude Octopus: Choose Session"
+      },
+      {
+        "command": "claudeOctopus.previewMood",
+        "title": "Claude Octopus: Preview Mascot State"
       }
     ],
     "configuration": {
@@ -82,8 +90,10 @@
       "properties": {
         "claudeOctopus.contextWindow": {
           "type": "number",
-          "default": 200000,
-          "description": "Context window size in tokens. Switches to 1,000,000 automatically if usage exceeds this value."
+          "default": 0,
+          "minimum": 0,
+          "order": 20,
+          "description": "Context window size in tokens. 0 (default) learns it per model from your Claude Code history: models that have held more than 200k tokens get a 1M window. Set a number to force it."
         },
         "claudeOctopus.compactThreshold": {
           "type": "number",
@@ -151,17 +161,40 @@
             "activitybar",
             "explorer",
             "panel",
+            "floating",
             "hidden"
           ],
-          "default": "activitybar",
+          "default": "floating",
           "order": 2,
           "enumDescriptions": [
             "Its own icon in the Activity Bar.",
             "A small section inside the Explorer sidebar.",
             "A tab in the bottom panel, next to the terminal.",
-            "No view at all — only the status bar item."
+            "macOS: a tiny pixel Claude on top of the Claude Code chat box, floating over VS Code with a transparent background (other systems use the Activity Bar).",
+            "No view at all, only the status bar item."
           ],
-          "description": "Where the octopus lives."
+          "description": "Where the mascot lives."
+        },
+        "claudeOctopus.eyes": {
+          "type": "string",
+          "enum": [
+            "white",
+            "black"
+          ],
+          "default": "white",
+          "order": 3,
+          "enumDescriptions": [
+            "White eyes, like the Claude Code mascot.",
+            "Dark eyes."
+          ],
+          "description": "Eye colour of the floating mascot."
+        },
+        "claudeOctopus.gymReminder": {
+          "type": "string",
+          "default": "16:45",
+          "pattern": "^(([01]?\\d|2[0-3]):[0-5]\\d)?$",
+          "order": 3,
+          "markdownDescription": "Daily time (`HH:MM`, local) when the floating mascot lifts weights for 15 minutes to remind you to go to the gym. Leave empty to turn it off."
         },
         "claudeOctopus.quietWhileTyping": {
           "type": "boolean",
@@ -251,9 +284,9 @@
         },
         "claudeOctopus.vibeAfterSeconds": {
           "type": "number",
-          "default": 60,
+          "default": 600,
           "order": 9,
-          "description": "After Claude has been working non-stop this long, the octopus switches to vibe mode: sunglasses, headphones and bubble tea while you wait."
+          "description": "After Claude has been working non-stop this long, the mascot switches to vibe coding: sunglasses and head nods while you wait."
         },
         "claudeOctopus.boredAfterSeconds": {
           "type": "number",
@@ -279,7 +312,7 @@
             "Percentage of the context window already used.",
             "Percentage of the context window still free."
           ],
-          "description": "How the context percentage is shown. Note: Claude Code's own 'context left' figure counts down to auto-compact, which happens a little before the window is full, so it reads a few points lower."
+          "description": "How the context percentage is shown: used or left, as a share of the whole context window, like Claude Code's /context."
         }
       }
     }
@@ -295,7 +328,8 @@
     "context",
     "compact",
     "tokens",
-    "mascot"
+    "mascot",
+    "quota"
   ],
   "capabilities": {
     "untrustedWorkspaces": {

@@ -1,126 +1,102 @@
 # Claude Octopus
 
-*Unofficial.* A pixel octopus that lives in a little tank in VS Code and shows how full your Claude Code conversation is. The more context Claude uses, the bigger and redder it gets. When it is full, click it to run `/compact`.
+*Unofficial.* A tiny pixel Claude that sits on top of the Claude Code chat box in VS Code and shows how much of your Claude usage quota is left. It codes while Claude works, eats a **$** of your quota every time Claude answers, gets tired as your quota runs low, and sleeps until the limit resets.
 
-- **See your context at a glance**: size, colour, a progress bar and a percentage in the status bar.
-- **Compact in one click** when the conversation gets too long.
-- **Know when your prompt cache has gone cold**, so you know the next message will cost a full re-read.
-- A little companion that reacts to what Claude is doing, while staying out of your way.
+![The mascot playing every animation on top of the Claude Code input](media/readme/demo.gif)
 
 ## Getting started
 
 1. Install **Claude Octopus** from the Extensions view (search for "Claude Octopus").
-2. Open the tank from the octopus icon in the Activity Bar. The status bar also shows the context percentage, for example `42%`.
-3. Use Claude Code as usual in the same folder, either `claude` in the integrated terminal or the Claude Code extension. The octopus picks up the most recent session of the open workspace automatically.
+2. Open the Claude Code panel (or run `claude` in the terminal) and work as usual.
+3. The mascot appears on top of the Claude Code chat box. Hover over it to see your quota.
 
-That's it. There is nothing to sign in to and nothing to configure.
+That's it: no sign-in and nothing to configure. To move it, drag it once; it remembers the spot.
 
-## Reading your octopus
+On Windows and Linux the floating mascot is not available yet: you get the classic octopus tank in the Activity Bar instead.
 
-| What you see | What it means |
+## What it does
+
+| You see | It means |
 |---|---|
-| Small and orange | Plenty of room left in the context |
-| Bigger, redder, sweating | The context is past the compact threshold (75% by default) |
-| Shaking, glowing red, "click me" | Over 90%: time to compact |
-| Sitting, puffed up, cracks on its body | 100%: about to burst |
-| Tapping feet with a "•••" bubble | Claude is working right now |
-| Sunglasses, headphones and a drink | Claude has been working on its own for a while: you are vibe coding |
-| Droopy eyes, sighing, blowing bubblegum | Nothing has happened for a bit |
-| Eyes closed, "Zzz" | No activity for several minutes |
-| Nightcap, night sky, `💤 cache cold` | Claude's prompt cache has expired; your next message re-reads the whole conversation |
-| `⚡ 42m` under the bar | Minutes left before the prompt cache expires |
+| Strolling, kicking a ball, listening to music, chilling, lifting weights | Claude is idle and you have plenty of quota |
+| Typing on a laptop, sometimes with a coffee | Claude is working |
+| Sunglasses, nodding to the beat | Claude has been working on its own for a while: you are vibe coding |
+| A green **$** falls into its mouth | Claude answered: your quota is being eaten |
+| 📄 ✏️ 💻 🔍 🌐 💬 … fall into its mouth | Claude read a file, ran a command, searched or got your prompt |
+| Heavy eyelids and a drop of sweat | You have used 80% of your quota |
+| Slumped, a red empty battery above its head | 95% used: almost out |
+| Asleep under a nightcap | You hit the session (5-hour) or weekly limit; it sleeps until the reset |
+| Stretching | The limit has reset: back to work |
+| Lifting weights at 16:45 | Time for the gym! |
 
-When Claude reads a file, runs a command or gets a new prompt from you, a small label (📄 file, ›_ command, 💬 prompt, 🌐 web…) drops into the tank, sinks like fish food and the octopus eats it.
+**Hover** over the mascot to see your session and weekly usage, when each one resets, and how full the current conversation is.
 
-## Compacting
+The **status bar** shows your quota as a percentage, yellow from 80% and red from 95%.
 
-- **Click the octopus** once the context is past the threshold.
-- **Double-click** to compact at any time (you are asked to confirm while there is still room).
-- **Click the status bar item** when it turns yellow or red.
-- Or run **Claude Octopus: Run /compact** from the Command Palette.
+## See every animation
 
-The octopus types `/compact` into the terminal where `claude` is running. If it can't tell which terminal that is, it asks you once and remembers; you can change it later with **Claude Octopus: Choose Claude Terminal**.
+Run **Claude Octopus: Preview Mascot State** from the Command Palette (`Cmd+Shift+P`):
 
-Using the Claude Code extension panel instead of the terminal? The octopus can't type into that panel, so it offers a **Copy /compact** button: paste it into the chat box.
+- **Play all animations** plays all 16 in a row, 6 seconds each. Good for recording a demo.
+- Pick a single animation to see it for a minute.
+- **Stop preview** goes back to the real state.
 
-## Playing with it
+## Commands
 
-- **Poke it** when there is plenty of room: it blushes and sends hearts. Poke it five times and it dances.
-- **Pat its head** by rubbing the mouse back and forth over it.
-- Its **eyes follow your cursor**, and when idle it wanders, waves, hums, naps, and sometimes a butterfly lands on its head.
-
-## Seasonal outfits
-
-On special days the octopus dresses up automatically:
-
-| When | Outfit |
+| Command | What it does |
 |---|---|
-| 20 October and 8 March (Women's Day) | Flower crown, a rose and falling petals |
-| 15–26 December | Santa hat, snow and presents |
-| Around Lunar New Year | Lanterns, a red envelope and fireworks |
-| Messi's days (6 Oct 2026 farewell, 24 June, 18 December) | Argentina jersey, a ball and a goal. GOAT 🐐 |
-
-Turn this off with `claudeOctopus.theme: none`, pick an outfit to wear all the time, or add your own dates with `claudeOctopus.themeDates`.
-
-## Keeping it out of your way
-
-- **Motion** (`claudeOctopus.motion`): `calm` by default (no flashing or shaking), `minimal` for an almost still octopus, `lively` for every effect. Switch quickly with **Claude Octopus: Cycle Motion Level**. If your system has *Reduce motion* turned on, animations stay still.
-- **Quiet while typing**: the octopus holds still for a few seconds every time you type in an editor.
-- **Where it lives** (`claudeOctopus.location`): its own Activity Bar icon, a small section in the **Explorer**, a tab in the bottom **panel** next to the Terminal, or **hidden** (status bar only).
-- **Size**, **speech bubbles** and the **status bar item** can each be adjusted or turned off.
+| **Claude Octopus: Preview Mascot State** | Show any animation or state for a minute, or play them all |
+| **Claude Octopus: Choose Session** | Pick which Claude Code session to follow (it follows the most active one by default) |
+| **Claude Octopus: Run /compact** | Compact the current conversation |
+| **Claude Octopus: Refresh** | Re-read the session and quota right away |
 
 ## Settings
 
 | Setting | Default | What it does |
 |---|---|---|
-| `claudeOctopus.location` | `activitybar` | Where the tank lives: `activitybar`, `explorer`, `panel` or `hidden` |
-| `claudeOctopus.motion` | `calm` | How much it moves: `lively`, `calm` or `minimal` |
-| `claudeOctopus.size` | `1` | Size of the octopus (0.3 to 2) |
-| `claudeOctopus.compactThreshold` | `0.75` | How full the context must be before a single click compacts |
-| `claudeOctopus.confirmBelowThreshold` | `true` | Ask before compacting while there is still room |
+| `claudeOctopus.location` | `floating` | `floating` sits on the chat box (macOS); or `activitybar`, `explorer`, `panel`, `hidden` |
+| `claudeOctopus.eyes` | `white` | Eye colour: `white` or `black` |
+| `claudeOctopus.gymReminder` | `16:45` | Daily time (`HH:MM`) when it lifts weights to remind you to go to the gym; empty turns it off |
+| `claudeOctopus.size` | `1` | Size of the mascot (0.3 to 2) |
+| `claudeOctopus.motion` | `calm` | `minimal` stops it eating while Claude works |
+| `claudeOctopus.vibeAfterSeconds` | `600` | How long Claude must work on its own before vibe coding |
+| `claudeOctopus.showStatusBar` | `true` | Show the quota in the status bar |
 | `claudeOctopus.percentDisplay` | `used` | Show the percentage `used` or `left` |
-| `claudeOctopus.showStatusBar` | `true` | Show the percentage in the status bar |
-| `claudeOctopus.showSpeech` | `true` | Show speech bubbles (alerts are always shown) |
-| `claudeOctopus.quietWhileTyping` | `true` | Hold still while you type |
-| `claudeOctopus.knowledgeLabels` | `true` | Show names on the labels it eats; turn off to show icons only, for example while screen sharing |
-| `claudeOctopus.theme` | `auto` | Seasonal outfit: `auto`, `none`, or a fixed one |
-| `claudeOctopus.themeDates` | `[]` | Extra dates for outfits, for example `[{ "theme": "messi", "from": "10-01", "to": "10-07" }]` |
-| `claudeOctopus.sessionSource` | `workspace` | Follow the open workspace's session, or the `latest` session anywhere |
-| `claudeOctopus.terminalNamePattern` | `claude` | How to recognise the terminal running Claude Code |
-| `claudeOctopus.contextWindow` | `200000` | Context window size; switches to 1,000,000 automatically when a session goes beyond it |
-| `claudeOctopus.cacheTtl` | `auto` | Prompt cache lifetime: detected automatically, or `5m` / `1h` |
-| `claudeOctopus.vibeAfterSeconds` | `60` | How long Claude must work on its own before vibe mode |
-| `claudeOctopus.boredAfterSeconds` | `90` | How long without activity before it gets bored |
-| `claudeOctopus.sleepAfterMinutes` | `5` | How long without activity before it falls asleep |
+| `claudeOctopus.sessionSource` | `workspace` | Follow the open folder's Claude Code session, or the `latest` one anywhere |
+
+## Compacting
+
+The mascot still helps with long conversations: **click it** once the context is past 75% to run `/compact` (double-click to compact at any time). With Claude Code in a terminal it types `/compact` for you; with the Claude Code panel it copies `/compact` and focuses the chat box, so you only press `Cmd+V` and `Enter`.
 
 ## Privacy
 
 - **Everything stays on your machine.** The extension never connects to the internet.
-- **It only reads** Claude Code's local session history to count tokens; it never changes it and never shows your messages.
-- **Labels are masked.** Commands are shown by their description, never in full, and anything that looks like a key, token or password appears as `•••`.
-- **It only types into the terminal you chose**, and only ever types `/compact`.
+- **It only reads** the usage numbers Claude Code already saves on your computer and Claude Code's local session history. It never changes them and never shows your messages.
+- From Claude Code's settings file it reads **only the usage numbers**, nothing else.
+- **It only types `/compact`**, and only into the terminal you chose.
 
 ## FAQ
 
-**The percentage is a little different from what Claude Code shows.**
-Claude Code's "context left" counts down to the point where it compacts automatically, which is a bit before the context is completely full. The octopus measures against the whole context window, so its number reads a few points higher. Hover over the status bar item to see the exact token count.
+**The quota says "not measured yet".**
+Claude Code only saves your usage from time to time. After a limit window resets, the new numbers appear the next time Claude Code refreshes them.
 
-**I can't see the octopus.**
-Check `claudeOctopus.location`: with `panel` it is a tab in the bottom panel (it may be tucked behind the `···` menu), with `explorer` it is a section at the bottom of the Explorer. You can always run **Focus on Context View** from the Command Palette.
+**I can't see the mascot.**
+Check that `claudeOctopus.location` is `floating` and that the VS Code window with Claude Code is on screen. If it went somewhere odd, drag it back onto the chat box.
 
-**It shows "No Claude Code session found".**
-Start Claude Code in the folder you have open in VS Code. To follow a session from another folder, set `claudeOctopus.sessionSource` to `latest`.
+**It shows "No Claude Code session found" or follows the wrong session.**
+Start Claude Code in the folder you have open in VS Code, set `claudeOctopus.sessionSource` to `latest`, or pick the session with **Claude Octopus: Choose Session**.
 
-**The numbers look stuck.**
-Run **Claude Octopus: Refresh** from the Command Palette to re-read the session right away.
+**It covers something I want to click.**
+Hold `Option` and click: the click goes through the mascot. Or drag it somewhere else.
 
-**Clicking doesn't compact.**
-Make sure Claude Code is running in a VS Code terminal, then run **Claude Octopus: Choose Claude Terminal** to point the octopus at it. With the Claude Code extension panel, use the **Copy /compact** button and paste it into the chat.
+**I don't want the gym reminder.**
+Set `claudeOctopus.gymReminder` to an empty string, or to the time you actually go.
 
 ## Requirements
 
 - VS Code 1.85 or later
-- Claude Code, either the command line tool or the VS Code extension
+- Claude Code (the VS Code extension or the command line tool)
+- The floating mascot needs macOS
 
 ---
 
